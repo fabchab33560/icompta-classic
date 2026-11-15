@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#345d90">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<title>iCompta Classic — V1.3</title>
+<title>iCompta Classic — V1.4</title>
 <meta name="description" content="Comptabilité personnelle hors ligne, sans compte et sans abonnement">
 <meta name="color-scheme" content="light">
 <link rel="manifest" href="./manifest.webmanifest">
@@ -224,12 +224,13 @@ body{background:#e3e3e7}
 </head>
 <body>
 <div class="device" id="device" role="application" aria-label="iCompta Classic hors connexion">
- <div class="status"><span>●●● iCompta Classic</span><span>V1.3 · LOCAL ▰</span></div>
+ <div class="status"><span>●●● iCompta Classic</span><span>V1.4 · LOCAL ▰</span></div>
  <header class="navbar" id="header"></header>
  <main class="content" id="content"></main>
  <nav class="toolbar" id="toolbar" aria-label="Actions"></nav>
 </div>
 <script>'use strict';
+const APP_VERSION = '1.4';
 const KEY = 'icompta-classic-local-v08';
 const LEGACY = ['icompta-classic-local-v07','icompta-classic-local-v06']; // Les anciennes versions sont conservées en lecture seule
 const $ = id => document.getElementById(id);
@@ -519,11 +520,11 @@ function transactions(){
 
 function togglePoint(id){const t=data.transactions.find(x=>x.id===id);if(!t||t.status==='cancelled')return;t.status=t.status==='cleared'?'pending':'cleared';persist();render()}
 function removeTransaction(id){const t=data.transactions.find(x=>x.id===id);if(!t)return;const msg=t.transferId?'Supprimer les deux opérations liées à ce virement ?':'Supprimer cette opération ?';if(!confirm(msg))return;data.transactions=data.transactions.filter(x=>t.transferId?x.transferId!==t.transferId:x.id!==id);persist();render()}
-function startTransaction(id){const t=data.transactions.find(x=>x.id===id);if(t?.transferId){startTransfer(t.transferId);return}editingId=id;draft=t?clone(t):{id:uid(),account:accountId,label:'',amount:0,date:today(),category:'Alimentation',kind:'',comment:'',status:'pending',recurrence:'none',repeatEnd:''};sign=draft.amount>0?'credit':'debit';show('txEditor')}
+function startTransaction(id){const t=data.transactions.find(x=>x.id===id);if(t?.transferId){startTransfer(t.transferId);return}editingId=id;draft=t?clone(t):{id:uid(),account:accountId,label:'Nouveau',amount:0,date:today(),category:'Alimentation',kind:'',comment:'',status:'pending',recurrence:'none',repeatEnd:''};sign=draft.amount>0?'credit':'debit';show('txEditor')}
 function transactionEditor(){
   header(editingId?'Modifier':'Ajouter',nbtn('Annuler',"show('transactions')"),nbtn('Enregistrer','saveTransaction()'));
   $('content').innerHTML=`<div class="fields">
-    <div class="fieldpanel">${frow('Nom',`<input id="tLabel" value="${escapeHTML(draft.label)}" oninput="matchPrevious()" placeholder="Libellé">`)}<div id="match"></div></div>
+    <div class="fieldpanel">${frow('Nom',`<input id="tLabel" value="${escapeHTML(draft.label)}" onfocus="if(!editingId && this.value==='Nouveau')this.select()" oninput="matchPrevious()" placeholder="Nouveau">`)}<div id="match"></div></div>
     <div class="fieldpanel">${frow('Montant',`<input id="tAmount" inputmode="decimal" value="${moneyInput(draft.amount)}" aria-label="Montant"><span>€</span>`)}<div class="switches"><button id="debit" onclick="setSign('debit')">Débit −</button><button id="credit" onclick="setSign('credit')">Crédit +</button></div></div>
     <div class="fieldpanel">${frow('Date',`<input type="date" id="tDate" value="${escapeHTML(draft.date)}">`)}${frow('Statut',`<select id="tStatus"><option value="pending">En attente</option><option value="cleared">Pointée</option><option value="cancelled">Annulée</option></select>`)}${frow('Catégorie',`<span class="swatch" id="tCategoryColor"></span><select id="tCategory" onchange="updateCategoryPreview()">${categoriesOptions(draft.category)}</select>`)}</div>
     <div class="fieldpanel">${frow('Fréquence',`<select id="tRepeat" onchange="updateRepeatEnd()"><option value="none">Aucune</option><option value="monthly">Tous les mois</option><option value="fourweeks">Toutes les 4 semaines</option></select>`)}</div>
@@ -545,7 +546,7 @@ function updateCategoryPreview(){const el=$('tCategoryColor');if(el)el.style.bac
 function setSign(value){sign=value;for(const x of ['debit','credit'])$(x).classList.toggle('active',x===value)}
 function matchPrevious(){const name=$('tLabel').value.trim().toLocaleLowerCase('fr');const t=!editingId?data.transactions.filter(t=>!t.transferId&&t.label.toLocaleLowerCase('fr')===name).sort((a,b)=>b.date.localeCompare(a.date))[0]:null;$('match').innerHTML=t?`<div class="hint"><button onclick="copyPrevious('${t.id}')">↺ Reprendre les informations de « ${escapeHTML(t.label)} »</button></div>`:''}
 function copyPrevious(id){const t=data.transactions.find(t=>t.id===id);if(!t)return;$('tAmount').value=moneyInput(t.amount);setSign(t.amount>=0?'credit':'debit');$('tCategory').value=t.category;updateCategoryPreview()}
-function saveTransaction(){const value=inputMoneyPreserve('tAmount',draft.amount),name=$('tLabel').value.trim(),date=$('tDate').value;if(!name||value===null||!/^\d{4}-\d\d-\d\d$/.test(date)){$('error').textContent='Vérifie le libellé, le montant et la date.';return}const recurrence=$('tRepeat').value,repeatEnd=recurrence==='none'?'':$('tRepeatEnd').value;
+function saveTransaction(){const value=inputMoneyPreserve('tAmount',draft.amount),name=$('tLabel').value.trim()||'Nouveau',date=$('tDate').value;if(value===null||!/^\d{4}-\d\d-\d\d$/.test(date)){$('error').textContent='Vérifie le montant et la date.';return}const recurrence=$('tRepeat').value,repeatEnd=recurrence==='none'?'':$('tRepeatEnd').value;
   if(repeatEnd&&repeatEnd<date){$('error').textContent='La date de fin doit suivre la date de l’opération.';return}
   if (editingId && draft.category !== $('tCategory').value && Array.isArray(draft.allocations) && draft.allocations.length && !confirm('Changer la catégorie principale supprimera sa répartition historique entre catégories. Continuer ?')) return;
   const updated={...draft,label:name,amount:(sign==='debit'?-value:value),date,category:$('tCategory').value,allocations:(draft.category===$('tCategory').value?draft.allocations:null),status:$('tStatus').value,
@@ -868,10 +869,53 @@ function enableRecurrences(){
  if(!confirm('Tu as vérifié les soldes de tous tes comptes et exporté une sauvegarde ? Activer la création automatique des prochaines échéances au lancement ?'))return;
  data.verified=true;autoAdvanceRecurrences();persist();show('info');
 }
+async function actualiserApplication(){
+  if(location.protocol==='file:'){
+    alert('La version locale Mac se met à jour en ouvrant le nouveau fichier HTML.');
+    return;
+  }
+  if(!navigator.onLine){
+    alert('Active le Wi-Fi pour vérifier la version publiée. Tes comptes restent accessibles hors connexion.');
+    return;
+  }
+  try{
+    const url=new URL('./index.html',location.href);
+    url.searchParams.set('_v',String(Date.now()));
+    const response=await fetch(url.toString(),{cache:'no-store'});
+    if(!response.ok)throw Error('Le site répond HTTP '+response.status);
+    const source=await response.text();
+    const match=source.match(/<title>iCompta Classic — V([0-9.]+)<\/title>/);
+    if(!match)throw Error('Numéro de version introuvable sur le site.');
+    const online=match[1];
+    if(online===APP_VERSION){
+      alert('Version V'+APP_VERSION+' confirmée. La comptabilité locale est inchangée.');
+      return;
+    }
+    const parseVersion=s=>s.split('.').map(n=>Number(n));
+    const local=parseVersion(APP_VERSION),remote=parseVersion(online);
+    const newer=remote[0]>local[0]||(remote[0]===local[0]&&(remote[1]||0)>(local[1]||0));
+    if(!newer){
+      alert('Le site public annonce V'+online+' alors que cette application est en V'+APP_VERSION+'. Vérifie la branche main et la publication GitHub Pages, sans effacer tes données.');
+      return;
+    }
+    const reg=await navigator.serviceWorker?.getRegistration();
+    if(reg)await reg.update();
+    // Ces caches ne stockent que les fichiers publics de l'application.
+    if('caches' in window){
+      const cacheKeys=await caches.keys();
+      await Promise.all(cacheKeys.filter(key=>key.startsWith('icompta-classic-shell-')).map(key=>caches.delete(key)));
+    }
+    alert('La V'+online+' est en ligne. L’application va recharger le code. Tes comptes et opérations ne sont pas effacés.');
+    location.replace(new URL('./index.html?maj='+encodeURIComponent(online)+'-'+Date.now(),location.href).toString());
+  }catch(err){
+    alert('Vérification impossible : '+String(err.message||err)+'. Ne supprime pas l’application ni ses données.');
+  }
+}
+
 function info(){
  header('Données locales',nbtn('‹ iCompta',"show('home')"),'');
  const recent=readHistory().map((x,i)=>`<button class="softbtn wide" onclick="restoreRecentState(${i})">↶ État de secours ${i+1} · ${escapeHTML(new Date(x.at).toLocaleString('fr-FR'))}</button>`).join('');
- $('content').innerHTML=`<div class="info"><h3>iCompta Classic · V1.1 locale</h3>
+ $('content').innerHTML=`<div class="info"><h3>iCompta Classic · V${APP_VERSION} locale</h3>
  <p><strong>${data.isRealData?'Comptabilité importée':'Démonstration avec montants fictifs'}</strong>. Aucune connexion bancaire, aucun abonnement. Les données sont conservées dans le navigateur de cet appareil.</p>
  ${migratedFrom?'<p class="smallnote">Une précédente version a été détectée. La sauvegarde V0.7 reste inchangée.</p>':''}
  <p class="smallnote warning">Prototype non audité. Le stockage du navigateur peut être effacé. Les fichiers JSON exportés ne sont pas chiffrés : garde-les dans un endroit privé.</p>
@@ -890,7 +934,10 @@ function info(){
  <h3>4. Opérations récurrentes</h3>
  <p>${data.verified?'Création automatique des échéances : activée.':data.isRealData?'Création automatique : suspendue jusqu’à vérification des soldes. Les prochaines échéances figurent dans les prévisions.':'Création automatique active sur les données fictives.'}</p>
  ${data.isRealData&&!data.verified?'<button class="softbtn wide" onclick="enableRecurrences()">Activer après vérification des soldes</button>':''}
- <h3>5. Installation et fonctionnement</h3>
+ <h3>5. Mises à jour</h3>
+ <p>Version installée : <strong>V${APP_VERSION}</strong>. Le bouton ci-dessous recharge uniquement les fichiers publics, sans supprimer les comptes locaux.</p>
+ <button class="softbtn wide" onclick="actualiserApplication()">↻ Vérifier la version et actualiser</button>
+ <h3>6. Installation et fonctionnement</h3>
  <p>${location.protocol==='file:'?'Ouvert en fichier local : utilisation sur Mac, sans installation iPhone.':'Version web : pour installer sur iPhone, ouverture initiale en HTTPS, puis ajout à l’écran d’accueil.'}</p>
  <p>Les écrans Budget, Échéancier et Opérations reprennent les photographies originales d’iCompta 2.</p>
  ${storageWarning?'<p class="warning">Attention : stockage indisponible ou saturé. Exporte immédiatement une sauvegarde avant toute autre modification.</p>':''}
@@ -912,7 +959,7 @@ function render(){switch(screen){
   case 'info':info();break;case 'audit':auditScreen();break;case 'schedule':scheduleScreen();break;default:show('home');break;
 }}
 persist();render();
-if ('serviceWorker' in navigator && (location.protocol==='https:' || location.hostname==='localhost' || location.hostname==='127.0.0.1')) navigator.serviceWorker.register('./sw.js').catch(err=>console.warn('Mode hors ligne non activé',err));
+if ('serviceWorker' in navigator && (location.protocol==='https:' || location.hostname==='localhost' || location.hostname==='127.0.0.1')) navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(reg=>{if(navigator.onLine)reg.update().catch(()=>{});}).catch(err=>console.warn('Mode hors ligne non activé',err));
 </script>
 </body>
 </html>
