@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#345d90">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<title>iCompta Classic — V1.5</title>
+<title>iCompta Classic — V1.6</title>
 <meta name="description" content="Comptabilité personnelle hors ligne, sans compte et sans abonnement">
 <meta name="color-scheme" content="light">
 <link rel="manifest" href="./manifest.webmanifest">
@@ -271,17 +271,43 @@ body{background:#e3e3e7}
   }
 }
 
+
+/* V1.6 — sélecteur de catégories aux couleurs hexadécimales exactes. */
+.category-selector{display:flex;flex:1;min-width:0;align-items:center}
+.category-selector input[type=hidden]{display:none!important}
+.category-trigger{background:#fff;border:1px solid #b2c2d0;border-radius:7px;color:#263543;display:flex;align-items:center;gap:9px;padding:8px 9px;min-height:43px;width:100%;max-width:100%;text-align:left;font-size:14px;min-width:0}
+.category-trigger:active{background:#f3f6f9}
+.category-color-chip,.category-picker-color{display:block;flex:none;width:21px;height:21px;border:1px solid #0002;border-radius:5px;box-shadow:inset 0 0 0 1px #fff2}
+.category-trigger-name{min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.category-trigger-arrow{font-size:17px;font-weight:700;color:#8b99a6;flex:none}
+.budget-line{grid-template-columns:minmax(65px,1fr) 75px 87px 28px;gap:5px}
+.budget-line .category-trigger{font-size:11px;min-height:36px;padding:5px;gap:4px}
+.budget-line .category-color-chip{width:14px;height:14px;border-radius:3px}
+.budget-line .category-trigger-arrow{font-size:12px}
+@media(max-width:360px){.budget-line{grid-template-columns:minmax(58px,1fr) 64px 70px 25px;gap:3px}.budget-line .category-trigger{font-size:10px;padding:3px;gap:3px}}
+.category-picker-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:flex-end;justify-content:center;background:rgba(12,27,44,.45)}
+.category-picker-sheet{width:100%;max-width:570px;max-height:min(85dvh,760px);background:#fff;color:#22313e;border-radius:18px 18px 0 0;display:flex;flex-direction:column;box-shadow:0 -10px 32px #15243648;overflow:hidden;padding-bottom:max(14px,env(safe-area-inset-bottom,0px))}
+.category-picker-head{flex:none;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:15px 17px;border-bottom:1px solid #dbe1e5;background:#f7f9fb;font-size:17px}
+.category-picker-close{color:#32699a;border:0;background:transparent;padding:8px;font-size:14px;font-weight:700;min-height:44px}
+.category-picker-list{min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.category-picker-item{display:flex;width:100%;align-items:center;gap:13px;min-height:61px;padding:12px 21px;text-align:left;background:#fff;border:0;border-bottom:1px solid #e7ebee;color:#26313a;font-size:16px}
+.category-picker-item.selected{background:#edf5fb}
+.category-picker-item:active{background:#e7f1f9}
+.category-picker-color{width:26px;height:26px;border-radius:6px}
+.category-picker-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.category-picker-check{font-size:21px;color:#387cad;min-width:24px;text-align:right;font-weight:800}
+@media(min-width:700px){.category-picker-overlay{align-items:center}.category-picker-sheet{border-radius:16px;padding-bottom:0;max-height:80vh}}
 </style>
 </head>
 <body>
 <div class="device" id="device" role="application" aria-label="iCompta Classic hors connexion">
- <div class="status"><span>●●● iCompta Classic</span><span>V1.5 · LOCAL ▰</span></div>
+ <div class="status"><span>●●● iCompta Classic</span><span>V1.6 · LOCAL ▰</span></div>
  <header class="navbar" id="header"></header>
  <main class="content" id="content"></main>
  <nav class="toolbar" id="toolbar" aria-label="Actions"></nav>
 </div>
 <script>'use strict';
-const APP_VERSION = '1.5';
+const APP_VERSION = '1.6';
 const KEY = 'icompta-classic-local-v08';
 const LEGACY = ['icompta-classic-local-v07','icompta-classic-local-v06']; // Les anciennes versions sont conservées en lecture seule
 const $ = id => document.getElementById(id);
@@ -386,40 +412,82 @@ const activeCategories = () => data.categories.filter(c=>c.active).sort((a,b)=>a
 const category = name => data.categories.find(c=>c.name===name);
 const categoryColor = name => safeHex(category(name)?.color || DEFAULT_COLORS[name] || '#8c9ba8');
 
-function colorEmojiFor(hex){
-  const h=safeHex(hex).replace('#','');
-  const r=parseInt(h.slice(0,2),16), g=parseInt(h.slice(2,4),16), b=parseInt(h.slice(4,6),16);
-  const max=Math.max(r,g,b), min=Math.min(r,g,b), d=max-min;
-  const avg=(r+g+b)/3;
-  const sat=max===0?0:d/max;
-  if(avg>235 && sat<0.12) return '⬜';
-  if(avg<45 && sat<0.18) return '⬛';
-  if(sat<0.18){
-    if(avg<110) return '⬛';
-    if(avg<190) return '◻️';
-    return '⬜';
-  }
-  let hue=0;
-  if(d===0) hue=0;
-  else if(max===r) hue=((g-b)/d)%6;
-  else if(max===g) hue=(b-r)/d+2;
-  else hue=(r-g)/d+4;
-  hue=Math.round(hue*60);
-  if(hue<0) hue+=360;
-  if((hue>=0 && hue<15) || hue>=345) return '🟥';
-  if(hue<45) return '🟧';
-  if(hue<70) return '🟨';
-  if(hue<165) return '🟩';
-  if(hue<255) return '🟦';
-  if(hue<320) return '🟪';
-  if(hue<345) return '🟫';
-  return '🔹';
-}
-
 const account = id => data.accounts.find(a=>a.id===id);
 const txFor = id => data.transactions.filter(t=>t.account===id).sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));
-const categoriesOptions = selected => [...new Set([...activeCategories().filter(x=>x.name!=='Transfert').map(x=>x.name),selected])].filter(Boolean).sort((a,b)=>a.localeCompare(b,'fr'))
-  .map(c=>{ const color=categoryColor(c), chip=colorEmojiFor(color); return `<option value="${escapeHTML(c)}" style="color:${color};font-weight:600" ${c===selected?'selected':''}>${chip} ${escapeHTML(c)}</option>`; }).join('');
+// Les pastilles utilisent directement la couleur #RRGGBB stockée dans la catégorie.
+function categorySelector(selected, fieldClass='category-value', fieldId=''){
+  const color=categoryColor(selected);
+  const id=fieldId?` id="${escapeHTML(fieldId)}"`:'';
+  const current=selected||'Sans catégorie';
+  return `<div class="category-selector">
+    <input type="hidden" class="category-value ${escapeHTML(fieldClass)}"${id} value="${escapeHTML(current)}">
+    <button type="button" class="category-trigger" onclick="openCategoryPicker(this)" aria-haspopup="dialog" aria-label="Choisir une catégorie. Sélection actuelle : ${escapeHTML(current)}">
+      <span class="category-color-chip" style="background-color:${color}" aria-hidden="true"></span>
+      <span class="category-trigger-name">${escapeHTML(current)}</span>
+      <span class="category-trigger-arrow" aria-hidden="true">⌄</span>
+    </button>
+  </div>`;
+}
+
+let categoryPickerFocus=null;
+function closeCategoryPicker(returnFocus=true){
+  const overlay=document.getElementById('categoryPickerOverlay');
+  if(overlay) overlay.remove();
+  const previous=categoryPickerFocus;
+  categoryPickerFocus=null;
+  if(returnFocus && previous?.isConnected)previous.focus({preventScroll:true});
+}
+function openCategoryPicker(trigger){
+  closeCategoryPicker(false);
+  const box=trigger.closest('.category-selector');
+  const input=box?.querySelector('input.category-value');
+  if(!input)return;
+  categoryPickerFocus=trigger;
+  const selected=input.value;
+  const names=[...new Set([...activeCategories().filter(x=>x.name!=='Transfert').map(x=>x.name),selected])]
+    .filter(Boolean).sort((a,b)=>a.localeCompare(b,'fr'));
+  const overlay=document.createElement('div');
+  overlay.id='categoryPickerOverlay';
+  overlay.className='category-picker-overlay';
+  overlay.innerHTML=`<section class="category-picker-sheet" role="dialog" aria-modal="true" aria-label="Choisir une catégorie">
+    <div class="category-picker-head"><strong>Choisir une catégorie</strong><button type="button" class="category-picker-close" data-close>Fermer</button></div>
+    <div class="category-picker-list" role="list">
+      ${names.map((name,i)=>`<button type="button" role="listitem" class="category-picker-item${name===selected?' selected':''}" data-category-index="${i}" aria-label="${escapeHTML(name)}${name===selected?', sélectionnée':''}">
+        <span class="category-picker-color" aria-hidden="true" style="background-color:${categoryColor(name)}"></span>
+        <span class="category-picker-name">${escapeHTML(name)}</span>
+        <span class="category-picker-check" aria-hidden="true">${name===selected?'✓':''}</span>
+      </button>`).join('')}
+    </div>
+  </section>`;
+  overlay.addEventListener('click',event=>{
+    if(event.target===overlay || event.target.closest('[data-close]')){closeCategoryPicker();return;}
+    const option=event.target.closest('[data-category-index]');
+    if(!option)return;
+    const index=Number(option.dataset.categoryIndex);
+    if(!Number.isInteger(index)||!names[index])return;
+    const name=names[index];
+    input.value=name;
+    updateSelectedCategoryDisplay(box,name);
+    closeCategoryPicker();
+  });
+  overlay.addEventListener('keydown',event=>{
+    if(event.key==='Escape'){event.preventDefault();closeCategoryPicker();}
+  });
+  document.body.appendChild(overlay);
+  const selectedRow=overlay.querySelector('.category-picker-item.selected');
+  (selectedRow||overlay.querySelector('.category-picker-item')||overlay.querySelector('[data-close]'))?.focus({preventScroll:true});
+  selectedRow?.scrollIntoView({block:'nearest'});
+}
+function updateSelectedCategoryDisplay(box,name){
+  const trigger=box?.querySelector('.category-trigger');
+  if(!trigger)return;
+  const color=categoryColor(name);
+  const label=trigger.querySelector('.category-trigger-name');
+  const chip=trigger.querySelector('.category-color-chip');
+  if(label)label.textContent=name;
+  if(chip)chip.style.backgroundColor=color;
+  trigger.setAttribute('aria-label','Choisir une catégorie. Sélection actuelle : '+name);
+}
 const moneyBalFor = (source,a) => {
   let real=a.initial, cleared=a.initial;
   for(const t of source.transactions.filter(t=>t.account===a.id)) {
@@ -577,7 +645,7 @@ function transactionEditor(){
   $('content').innerHTML=`<div class="fields">
     <div class="fieldpanel">${frow('Nom',`<input id="tLabel" value="${escapeHTML(draft.label)}" onfocus="if(!editingId && this.value==='Nouveau')this.select()" oninput="matchPrevious()" placeholder="Nouveau">`)}<div id="match"></div></div>
     <div class="fieldpanel">${frow('Montant',`<input id="tAmount" inputmode="decimal" value="${moneyInput(draft.amount)}" aria-label="Montant"><span>€</span>`)}<div class="switches"><button id="debit" onclick="setSign('debit')">Débit −</button><button id="credit" onclick="setSign('credit')">Crédit +</button></div></div>
-    <div class="fieldpanel">${frow('Date',`<input type="date" id="tDate" value="${escapeHTML(draft.date)}">`)}${frow('Statut',`<select id="tStatus"><option value="pending">En attente</option><option value="cleared">Pointée</option><option value="cancelled">Annulée</option></select>`)}${frow('Catégorie',`<span class="swatch" id="tCategoryColor"></span><select id="tCategory" onchange="updateCategoryPreview()">${categoriesOptions(draft.category)}</select>`)}</div>
+    <div class="fieldpanel">${frow('Date',`<input type="date" id="tDate" value="${escapeHTML(draft.date)}">`)}${frow('Statut',`<select id="tStatus"><option value="pending">En attente</option><option value="cleared">Pointée</option><option value="cancelled">Annulée</option></select>`)}${frow('Catégorie',categorySelector(draft.category,'','tCategory'))}</div>
     <div class="fieldpanel">${frow('Fréquence',`<select id="tRepeat" onchange="updateRepeatEnd()"><option value="none">Aucune</option><option value="monthly">Tous les mois</option><option value="fourweeks">Toutes les 4 semaines</option></select>`)}</div>
     <div id="repeatEndArea" class="fieldpanel" style="display:none">${frow('Créer avant',`<select id="tRepeatNotice"><option value="month">Un mois avant</option><option value="week">Une semaine avant</option><option value="fourweeks">Quatre semaines avant</option></select>`)}${frow('Fin (facultatif)',`<input type="date" id="tRepeatEnd" value="${escapeHTML(draft.repeatEnd||'')}">`)}</div>
     ${editingId&&Array.isArray(draft.allocations)&&draft.allocations.length?'<p class="smallnote warning">Cette opération est ventilée sur plusieurs catégories. Son détail est conservé tant que la catégorie principale ne change pas.</p>':''}
@@ -593,7 +661,7 @@ function createNextOccurrenceFromEditor(){
     if(createNextOccurrence(editingId,true))show('transactions');else alert('Impossible de créer une nouvelle échéance (date de fin dépassée, par exemple).');
   }
 }
-function updateCategoryPreview(){const el=$('tCategoryColor');if(el)el.style.background=categoryColor($('tCategory')?.value)}
+function updateCategoryPreview(){const input=$('tCategory');if(input)updateSelectedCategoryDisplay(input.closest('.category-selector'),input.value)}
 function setSign(value){sign=value;for(const x of ['debit','credit'])$(x).classList.toggle('active',x===value)}
 function matchPrevious(){const name=$('tLabel').value.trim().toLocaleLowerCase('fr');const t=!editingId?data.transactions.filter(t=>!t.transferId&&t.label.toLocaleLowerCase('fr')===name).sort((a,b)=>b.date.localeCompare(a.date))[0]:null;$('match').innerHTML=t?`<div class="hint"><button onclick="copyPrevious('${t.id}')">↺ Reprendre les informations de « ${escapeHTML(t.label)} »</button></div>`:''}
 function copyPrevious(id){const t=data.transactions.find(t=>t.id===id);if(!t)return;$('tAmount').value=moneyInput(t.amount);setSign(t.amount>=0?'credit':'debit');$('tCategory').value=t.category;updateCategoryPreview()}
@@ -769,7 +837,7 @@ function collectBudgetDraft(){
 function budgetEditor(){
   header('Modifier budget',nbtn('Annuler',"show('budget')"),nbtn('Enregistrer','saveBudget()'));
   const accounts=data.accounts.map(a=>`<label><input type="checkbox" value="${a.id}" ${draft.accounts.includes(a.id)?'checked':''}> ${escapeHTML(a.name)}</label>`).join('');
-  const lines=draft.lines.map((l,i)=>`<div class="budget-line" data-id="${l.id||uid()}"><span class="swatch" style="background:${categoryColor(l.category)}"></span><select class="linecat" onchange="this.previousElementSibling.style.background=categoryColor(this.value)">${categoriesOptions(l.category)}</select><select class="lineside"><option value="expense" ${l.side==='expense'?'selected':''}>Débit −</option><option value="income" ${l.side==='income'?'selected':''}>Crédit +</option></select><input class="lineamount" inputmode="decimal" aria-label="Montant annuel" value="${moneyInput(l.amount)}"><button class="removeLine" title="Retirer cette ligne" onclick="removeBudgetLine(${i})">✕</button></div>`).join('');
+  const lines=draft.lines.map((l,i)=>`<div class="budget-line" data-id="${l.id||uid()}">${categorySelector(l.category,'linecat')}<select class="lineside"><option value="expense" ${l.side==='expense'?'selected':''}>Débit −</option><option value="income" ${l.side==='income'?'selected':''}>Crédit +</option></select><input class="lineamount" inputmode="decimal" aria-label="Montant annuel" value="${moneyInput(l.amount)}"><button class="removeLine" title="Retirer cette ligne" onclick="removeBudgetLine(${i})">✕</button></div>`).join('');
   $('content').innerHTML=`<div class="notice">UN SEUL BUDGET ANNUEL · EURO (€)</div><div class="fields">${section('Comptes inclus',`<div class="accountchecks" id="budgetAccounts">${accounts}</div>`)}${section('Montants annuels par catégorie',`<div id="budgetLines">${lines}</div><div class="inline-actions"><button class="softbtn" onclick="addBudgetLine()">＋ Ajouter une catégorie</button></div>`)}<p class="smallnote">Chaque catégorie utilise sa propre couleur, définie dans le menu Catégories.</p><div id="error" class="error"></div></div>`;
   $('toolbar').innerHTML=btn('Retour','‹',"show('budget')")+btn('Enregistrer','✓','saveBudget()');
 }
@@ -971,7 +1039,7 @@ function info(){
  ${migratedFrom?'<p class="smallnote">Une précédente version a été détectée. La sauvegarde V0.7 reste inchangée.</p>':''}
  <p class="smallnote warning">Prototype non audité. Le stockage du navigateur peut être effacé. Les fichiers JSON exportés ne sont pas chiffrés : garde-les dans un endroit privé.</p>
  <h3>1. Importer une comptabilité</h3>
- <p>Fichier accepté : <code>iCompta_Import_REFERENCE_V10_PRIVE.json</code> ou sauvegarde iCompta Classic. Lecture uniquement sur cet appareil.</p>
+ <p>Fichier accepté : ton import privé JSON ou une sauvegarde iCompta Classic. Lecture uniquement sur cet appareil.</p>
  <input id="importFile" aria-label="Fichier JSON privé à importer" type="file" accept=".json,application/json" onchange="prepareImport(event)">
  <div id="importPreview" class="fieldpanel importbox">Aucun fichier sélectionné.</div>
  <p class="smallnote">Affichage arrondi à l’euro : les centimes restent conservés dans les calculs et les sauvegardes.</p>
