@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#345d90">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<title>iCompta Classic — V1.4</title>
+<title>iCompta Classic — V1.5</title>
 <meta name="description" content="Comptabilité personnelle hors ligne, sans compte et sans abonnement">
 <meta name="color-scheme" content="light">
 <link rel="manifest" href="./manifest.webmanifest">
@@ -220,17 +220,68 @@ body{background:#e3e3e7}
 
 .field select option{font-weight:600;}
 
+
+/* V1.5 : mise en page spécifique aux applications iPhone installées.
+   iOS 27 peut signaler une hauteur de fenêtre inférieure à celle de l'écran.
+   Contrairement à V1.2, ne jamais limiter les zones de sécurité à 18px/8px. */
+@media (display-mode: standalone) {
+  :root {
+    --app-safe-top: max(56px, env(safe-area-inset-top, 0px));
+    --app-safe-bottom: max(14px, env(safe-area-inset-bottom, 0px));
+  }
+  html, body {
+    width: 100%;
+    height: 100lvh;
+    min-height: 100lvh;
+    margin: 0;
+    overflow: hidden;
+    background: #eef1f4;
+  }
+  body {
+    display: block;
+  }
+  .device {
+    /* Évite le positionnement fixed + 100svh de V1.2. */
+    position: relative !important;
+    inset: auto !important;
+    width: 100vw !important;
+    height: 100lvh !important;
+    max-width: none !important;
+    max-height: none !important;
+    min-height: 0 !important;
+    margin: 0;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+  .status { display: none; }
+  .navbar {
+    padding-top: var(--app-safe-top) !important;
+    min-height: calc(49px + var(--app-safe-top)) !important;
+  }
+  .content {
+    min-height: 0;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  .toolbar {
+    min-height: calc(58px + var(--app-safe-bottom)) !important;
+    padding-bottom: var(--app-safe-bottom) !important;
+    background: linear-gradient(#f5f6f8, #eef1f4);
+  }
+}
+
 </style>
 </head>
 <body>
 <div class="device" id="device" role="application" aria-label="iCompta Classic hors connexion">
- <div class="status"><span>●●● iCompta Classic</span><span>V1.4 · LOCAL ▰</span></div>
+ <div class="status"><span>●●● iCompta Classic</span><span>V1.5 · LOCAL ▰</span></div>
  <header class="navbar" id="header"></header>
  <main class="content" id="content"></main>
  <nav class="toolbar" id="toolbar" aria-label="Actions"></nav>
 </div>
 <script>'use strict';
-const APP_VERSION = '1.4';
+const APP_VERSION = '1.5';
 const KEY = 'icompta-classic-local-v08';
 const LEGACY = ['icompta-classic-local-v07','icompta-classic-local-v06']; // Les anciennes versions sont conservées en lecture seule
 const $ = id => document.getElementById(id);

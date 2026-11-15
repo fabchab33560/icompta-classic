@@ -1,5 +1,5 @@
 /* Coquille publique seulement : les comptes et sauvegardes ne sont jamais mis en cache ici. */
-const CACHE='icompta-classic-shell-v14-0';
+const CACHE='icompta-classic-shell-v15-0';
 const ASSETS=['./','./index.html','./manifest.webmanifest','./icone-192.png','./icone-512.png'];
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting()));
