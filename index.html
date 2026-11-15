@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#345d90">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>iCompta Classic — V0.9</title>
+<title>iCompta Classic — V1.0</title>
 <meta name="description" content="Comptabilité personnelle hors ligne, sans compte et sans abonnement">
 <meta name="color-scheme" content="light">
 <link rel="manifest" href="./manifest.webmanifest">
@@ -184,7 +184,7 @@ body{background:#e3e3e7}
 @media(max-height:490px) and (orientation:landscape){.navbar{min-height:42px}.group h2{padding-top:5px;padding-bottom:5px}.budget-category{padding-top:3px;padding-bottom:4px}.budget-meter{height:20px}.budget-columns{padding-top:3px}.toolbar{min-height:45px}}
 
 
-/* V0.8 — contrôle d'import lisible sur petit écran, sans modifier le budget validé. */
+/* V1.0 — contrôle d'import lisible sur petit écran, sans modifier le budget validé. */
 .audit-table{width:100%;border-collapse:collapse;margin:10px 0 14px;font-size:12px;table-layout:fixed}
 .audit-table th,.audit-table td{padding:9px 5px;border-bottom:1px solid #dfe3e8;text-align:right;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
 .audit-table th:first-child,.audit-table td:first-child{text-align:left;width:39%}
@@ -197,7 +197,7 @@ body{background:#e3e3e7}
 </head>
 <body>
 <div class="device" id="device" role="application" aria-label="iCompta Classic hors connexion">
- <div class="status"><span>●●● iCompta Classic</span><span>V0.8 · LOCAL ▰</span></div>
+ <div class="status"><span>●●● iCompta Classic</span><span>V1.0 · LOCAL ▰</span></div>
  <header class="navbar" id="header"></header>
  <main class="content" id="content"></main>
  <nav class="toolbar" id="toolbar" aria-label="Actions"></nav>
@@ -207,8 +207,14 @@ const KEY = 'icompta-classic-local-v08';
 const LEGACY = ['icompta-classic-local-v07','icompta-classic-local-v06']; // Les anciennes versions sont conservées en lecture seule
 const $ = id => document.getElementById(id);
 const escapeHTML = v => String(v ?? '').replace(/[&<>"']/g, x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[x]));
-const euro = v => new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'}).format(v/100);
-const moneyInput = v => (Math.abs(v || 0)/100).toFixed(2).replace('.',',');
+const euro = v => new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR',minimumFractionDigits:0,maximumFractionDigits:0}).format(v/100);
+// Enter whole euros without discarding any historic cents if the input is unchanged.
+const moneyInput = v => String(Math.round(Math.abs(v || 0)/100));
+const inputMoneyPreserve = (id, originalCents, allowZero=false) => {
+  const raw=$(id).value.trim();
+  if(raw===moneyInput(originalCents)) return Math.abs(originalCents||0);
+  return cents(raw,allowZero);
+};
 const cents = (v, zero=false) => {
   const s=String(v).trim().replace(/[\s€\u00a0\u202f]/g,'').replace(',','.');
   if(!/^\d+(\.\d{1,2})?$/.test(s)) return null;
@@ -472,6 +478,7 @@ function transactionEditor(){
 }
 function updateRepeatEnd(){const a=$('repeatEndArea');if(a)a.style.display=$('tRepeat')?.value==='none'?'none':'block'}
 function createNextOccurrenceFromEditor(){
+  if(data.isRealData && !data.verified){alert('Création des mensualités suspendue : vérifie les soldes avant toute nouvelle échéance.');return;}
   if(confirm('Créer la prochaine échéance en conservant les données actuellement enregistrées ? (Les modifications non enregistrées seront ignorées.)')){
     if(createNextOccurrence(editingId,true))show('transactions');else alert('Impossible de créer une nouvelle échéance (date de fin dépassée, par exemple).');
   }
@@ -480,11 +487,11 @@ function updateCategoryPreview(){const el=$('tCategoryColor');if(el)el.style.bac
 function setSign(value){sign=value;for(const x of ['debit','credit'])$(x).classList.toggle('active',x===value)}
 function matchPrevious(){const name=$('tLabel').value.trim().toLocaleLowerCase('fr');const t=!editingId?data.transactions.filter(t=>!t.transferId&&t.label.toLocaleLowerCase('fr')===name).sort((a,b)=>b.date.localeCompare(a.date))[0]:null;$('match').innerHTML=t?`<div class="hint"><button onclick="copyPrevious('${t.id}')">↺ Reprendre les informations de « ${escapeHTML(t.label)} »</button></div>`:''}
 function copyPrevious(id){const t=data.transactions.find(t=>t.id===id);if(!t)return;$('tAmount').value=moneyInput(t.amount);setSign(t.amount>=0?'credit':'debit');$('tCategory').value=t.category;updateCategoryPreview()}
-function saveTransaction(){const value=cents($('tAmount').value),name=$('tLabel').value.trim(),date=$('tDate').value;if(!name||value===null||!/^\d{4}-\d\d-\d\d$/.test(date)){$('error').textContent='Vérifie le libellé, le montant et la date.';return}const recurrence=$('tRepeat').value,repeatEnd=recurrence==='none'?'':$('tRepeatEnd').value;
+function saveTransaction(){const value=inputMoneyPreserve('tAmount',draft.amount),name=$('tLabel').value.trim(),date=$('tDate').value;if(!name||value===null||!/^\d{4}-\d\d-\d\d$/.test(date)){$('error').textContent='Vérifie le libellé, le montant et la date.';return}const recurrence=$('tRepeat').value,repeatEnd=recurrence==='none'?'':$('tRepeatEnd').value;
   if(repeatEnd&&repeatEnd<date){$('error').textContent='La date de fin doit suivre la date de l’opération.';return}
   if (editingId && draft.category !== $('tCategory').value && Array.isArray(draft.allocations) && draft.allocations.length && !confirm('Changer la catégorie principale supprimera sa répartition historique entre catégories. Continuer ?')) return;
   const updated={...draft,label:name,amount:(sign==='debit'?-value:value),date,category:$('tCategory').value,allocations:(draft.category===$('tCategory').value?draft.allocations:null),status:$('tStatus').value,
-    recurrence,repeatEnd,repeatDay:recurrence==='monthly'?(draft.repeatDay||Number(date.slice(8,10))):null,repeatNotice:$('tRepeatNotice').value};const i=data.transactions.findIndex(t=>t.id===updated.id);if(i===-1)data.transactions.push(updated);else data.transactions[i]=updated;persist();autoAdvanceRecurrences();show('transactions')}
+    recurrence,repeatEnd,repeatDay:recurrence==='monthly'?(draft.repeatDay||Number(date.slice(8,10))):null,repeatNotice:$('tRepeatNotice').value};const i=data.transactions.findIndex(t=>t.id===updated.id);if(i===-1)data.transactions.push(updated);else data.transactions[i]=updated;persist();if (!data.isRealData || data.verified===true) autoAdvanceRecurrences();show('transactions')}
 function removeFromEditor(){if(editingId&&confirm('Supprimer définitivement cette opération ?')){data.transactions=data.transactions.filter(t=>t.id!==editingId);persist();show('transactions')}}
 function startAccount(id){editingId=id;draft=id?clone(account(id)):{id:uid(),name:'',initial:0,color:'#4168a6',icon:'▣'};sign=draft.initial<0?'debit':'credit';show('accountEditor')}
 function accountEditor(){
@@ -492,7 +499,7 @@ function accountEditor(){
   $('content').innerHTML=`<div class="fields"><div class="fieldpanel">${frow('Nom',`<input id="aName" value="${escapeHTML(draft.name)}">`)}${frow('Solde initial',`<input id="aAmount" inputmode="decimal" value="${moneyInput(draft.initial)}"><span>€</span>`)}<div class="switches"><button id="debit" onclick="setSign('debit')">Négatif −</button><button id="credit" onclick="setSign('credit')">Positif +</button></div></div><div class="fieldpanel">${frow('Icône',`<select id="aIcon"><option>▣</option><option>◆</option><option>▤</option><option>▦</option></select>`)}${frow('Couleur',`<input type="color" id="aColor" value="${safeHex(draft.color)}">`)}</div><div id="error" class="error"></div>${editingId?'<button class="danger" onclick="removeAccount()">Supprimer ce compte et ses opérations</button>':''}</div>`;
   $('aIcon').value=draft.icon;setSign(sign);$('toolbar').innerHTML=btn('Retour','‹',"show('home')")+btn('Enregistrer','✓','saveAccount()');
 }
-function saveAccount(){const value=cents($('aAmount').value,true),name=$('aName').value.trim();if(!name||value===null){$('error').textContent='Vérifie le nom et le solde initial.';return}const updated={...draft,name,initial:sign==='debit'?-value:value,color:safeHex($('aColor').value),icon:$('aIcon').value};const i=data.accounts.findIndex(a=>a.id===updated.id);if(i===-1)data.accounts.push(updated);else data.accounts[i]=updated;persist();editMode=false;show('home')}
+function saveAccount(){const value=inputMoneyPreserve('aAmount',draft.initial,true),name=$('aName').value.trim();if(!name||value===null){$('error').textContent='Vérifie le nom et le solde initial.';return}const updated={...draft,name,initial:sign==='debit'?-value:value,color:safeHex($('aColor').value),icon:$('aIcon').value};const i=data.accounts.findIndex(a=>a.id===updated.id);if(i===-1)data.accounts.push(updated);else data.accounts[i]=updated;persist();editMode=false;show('home')}
 function removeAccount(){if(!editingId||!confirm('Supprimer ce compte ET toutes ses opérations ? Une sauvegarde exportée est fortement conseillée avant de continuer.'))return;const linked=new Set(data.transactions.filter(t=>t.account===editingId&&t.transferId).map(t=>t.transferId));data.transactions=data.transactions.filter(t=>t.account!==editingId&&!linked.has(t.transferId));data.accounts=data.accounts.filter(a=>a.id!==editingId);data.budget.accounts=data.budget.accounts.filter(a=>a!==editingId);persist();show('home')}
 function categoriesScreen(){
   header('Catégories',nbtn('‹ iCompta',"show('home')"),nbtn('+ Ajouter','startCategory(null)'));
@@ -521,10 +528,10 @@ function restoreCategory(encoded){const c=category(decodeURIComponent(encoded));
 function startTransfer(link){transferId=link;const pair=link?data.transactions.filter(t=>t.transferId===link):[],out=pair.find(t=>t.amount<0),inc=pair.find(t=>t.amount>0);draft={from:out?.account||accountId||data.accounts[0]?.id,to:inc?.account||data.accounts.find(a=>a.id!==(out?.account||accountId))?.id,amount:Math.abs(out?.amount||0),date:out?.date||today(),comment:out?.comment||'Virement interne'};show('transfer')}
 function transferEditor(){header(transferId?'Modifier virement':'Virement',nbtn('Annuler',accountId?"show('transactions')":"show('home')"),nbtn('Enregistrer','saveTransfer()'));
   const opts=data.accounts.map(a=>`<option value="${a.id}">${escapeHTML(a.name)}</option>`).join('');
-  $('content').innerHTML=`<div class="fields"><div class="fieldpanel">${frow('De',`<select id="from">${opts}</select>`)}${frow('Vers',`<select id="to">${opts}</select>`)}${frow('Montant',`<input id="transferAmount" inputmode="decimal" value="${moneyInput(draft.amount)}"><span>€</span>`)}${frow('Date',`<input type="date" id="transferDate" value="${escapeHTML(draft.date)}">`)}</div><p class="smallnote">Chaque virement génère une dépense et un crédit liés. Les deux écritures sont exclues du budget annuel.</p><div class="error" id="error"></div>${transferId?'<button class="danger" onclick="removeTransfer()">Supprimer les deux opérations</button>':''}</div>`;
+  $('content').innerHTML=`<div class="fields"><div class="fieldpanel">${frow('De',`<select id="from">${opts}</select>`)}${frow('Vers',`<select id="to">${opts}</select>`)}${frow('Montant',`<input id="transferAmount" inputmode="decimal" value="${moneyInput(draft.amount)}"><span>€</span>`)}${frow('Date',`<input type="date" id="transferDate" value="${escapeHTML(draft.date)}">`)}</div><p class="smallnote">Chaque virement génère deux écritures liées. Son effet sur le budget dépend des comptes inclus.</p><div class="error" id="error"></div>${transferId?'<button class="danger" onclick="removeTransfer()">Supprimer les deux opérations</button>':''}</div>`;
   $('from').value=draft.from||'';$('to').value=draft.to||'';$('toolbar').innerHTML=btn('Retour','‹',accountId?"show('transactions')":"show('home')")+btn('Enregistrer','✓','saveTransfer()');
 }
-function saveTransfer(){const from=$('from').value,to=$('to').value,value=cents($('transferAmount').value),date=$('transferDate').value;if(!from||!to||from===to||value===null||!/^\d{4}-\d\d-\d\d$/.test(date)){$('error').textContent='Choisis deux comptes différents, un montant et une date.';return}const link=transferId||uid(),pair=data.transactions.filter(t=>t.transferId===link),out=pair.find(t=>t.amount<0),inc=pair.find(t=>t.amount>0);const note=draft.comment||'';data.transactions=data.transactions.filter(t=>t.transferId!==link);data.transactions.push({id:out?.id||uid(),account:from,transferId:link,label:`Vers ${account(to).name}`,amount:-value,date,category:'Transfert',kind:'Virement',comment:note,status:out?.status||'pending'},{id:inc?.id||uid(),account:to,transferId:link,label:`Depuis ${account(from).name}`,amount:value,date,category:'Transfert',kind:'Virement',comment:note,status:inc?.status||'pending'});persist();show(accountId?'transactions':'home')}
+function saveTransfer(){const from=$('from').value,to=$('to').value,value=inputMoneyPreserve('transferAmount',draft.amount),date=$('transferDate').value;if(!from||!to||from===to||value===null||!/^\d{4}-\d\d-\d\d$/.test(date)){$('error').textContent='Choisis deux comptes différents, un montant et une date.';return}const link=transferId||uid(),pair=data.transactions.filter(t=>t.transferId===link),out=pair.find(t=>t.amount<0),inc=pair.find(t=>t.amount>0);const note=draft.comment||'';data.transactions=data.transactions.filter(t=>t.transferId!==link);data.transactions.push({id:out?.id||uid(),account:from,transferId:link,label:`Vers ${account(to).name}`,amount:-value,date,category:'Transfert',kind:'Virement',comment:note,status:out?.status||'pending'},{id:inc?.id||uid(),account:to,transferId:link,label:`Depuis ${account(from).name}`,amount:value,date,category:'Transfert',kind:'Virement',comment:note,status:inc?.status||'pending'});persist();show(accountId?'transactions':'home')}
 function removeTransfer(){if(transferId&&confirm('Supprimer les deux opérations du virement ?')){data.transactions=data.transactions.filter(t=>t.transferId!==transferId);persist();show(accountId?'transactions':'home')}}
 
 let scheduleMonths=12,scheduleSearch='';
@@ -572,13 +579,19 @@ function filterSchedule(){
 function budgetData(year=budgetYear){
   const start=`${year}-01-01`,end=`${year+1}-01-01`;
   const included=[...data.transactions,...recurringProjections(year)].filter(t=>
-    data.budget.accounts.includes(t.account)&&t.status!=='cancelled'&&!t.transferId&&t.date>=start&&t.date<end);
+    data.budget.accounts.includes(t.account)&&t.status!=='cancelled'&&t.date>=start&&t.date<end);
+  // Keep signed amounts: a refund reduces expense, a salary correction reduces
+  // income. Internal transfers count in the chosen budget account, as in
+  // iCompta 2. If both accounts are included, the two entries offset.
   const allocationValue=(l,t)=>{
-    if(l.side==='expense' ? t.amount>=0 : t.amount<=0) return 0;
-    // Preserve exact allocation ratios from iCompta 2, including partial and negative ratios.
+    const signedSlice=(ratio)=> {
+      const raw=t.amount*ratio;
+      const value=Math.sign(raw)*Math.round(Math.abs(raw));
+      return l.side==='expense' ? -value : value;
+    };
     if(Array.isArray(t.allocations)&&t.allocations.length)
-      return t.allocations.filter(a=>a.category===l.category).reduce((n,a)=>n+Math.round(Math.abs(t.amount)*a.ratio),0);
-    return t.category===l.category?Math.abs(t.amount):0;
+      return t.allocations.filter(a=>a.category===l.category).reduce((n,a)=>n+signedSlice(a.ratio),0);
+    return t.category===l.category?signedSlice(1):0;
   };
   return data.budget.lines.map(l=>({...l,
     cleared:included.filter(t=>t.status==='cleared').reduce((s,t)=>s+allocationValue(l,t),0),
@@ -623,7 +636,7 @@ function budgetScreen(){
  $('content').innerHTML=`<div class="annual-budget">
    <div class="pickerrow"><button aria-label="Année précédente" onclick="budgetYear--;render()">‹</button><strong>${budgetYear}</strong><button aria-label="Année suivante" onclick="budgetYear++;render()">›</button></div>
    ${sectionHtml('income',incomes)}${sectionHtml('expense',expenses)}
-   <p class="budget-mininote">Présentation rapprochée d’iCompta 2 : pour chaque catégorie, la barre montre les montants pointés, prévus et le pourcentage restant. Les virements internes sont exclus du budget.</p>
+   <p class="budget-mininote">Présentation rapprochée d’iCompta 2 : pour chaque catégorie, la barre montre les montants pointés, prévus et le pourcentage restant. Les virements des comptes sélectionnés sont pris en compte, comme dans iCompta 2.</p>
    </div>`;
  $('toolbar').innerHTML=btn('Accueil','⌂',"show('home')")+btn('Échéancier','▦',"show('schedule')")+btn('Catégories','◈',"show('categories')")+btn('Modifier','✎','startBudgetEditor()');
 }
@@ -632,9 +645,13 @@ function startBudgetEditor(){draft=clone(data.budget);show('budgetEditor')}
 function collectBudgetDraft(){
   if(!$('budgetAccounts'))return;
   draft.accounts=[...$('budgetAccounts').querySelectorAll('input:checked')].map(el=>el.value);
-  draft.lines=[...$('budgetLines').querySelectorAll('.budget-line')].map(row=>({
-    id:row.dataset.id,category:row.querySelector('.linecat').value,side:row.querySelector('.lineside').value,amount:cents(row.querySelector('.lineamount').value,true)
-  }));
+  draft.lines=[...$('budgetLines').querySelectorAll('.budget-line')].map(row=>{
+    const old=draft.lines.find(x=>x.id===row.dataset.id);
+    const entered=row.querySelector('.lineamount').value.trim();
+    return {id:row.dataset.id,category:row.querySelector('.linecat').value,
+      side:row.querySelector('.lineside').value,
+      amount:old && entered===moneyInput(old.amount) ? old.amount : cents(entered,true)};
+  });
 }
 function budgetEditor(){
   header('Modifier budget',nbtn('Annuler',"show('budget')"),nbtn('Enregistrer','saveBudget()'));
@@ -798,9 +815,10 @@ function info(){
  ${migratedFrom?'<p class="smallnote">Une précédente version a été détectée. La sauvegarde V0.7 reste inchangée.</p>':''}
  <p class="smallnote warning">Prototype non audité. Le stockage du navigateur peut être effacé. Les fichiers JSON exportés ne sont pas chiffrés : garde-les dans un endroit privé.</p>
  <h3>1. Importer une comptabilité</h3>
- <p>Fichier accepté : <code>iCompta_Import_V05_PRIVE.json</code> ou sauvegarde iCompta Classic. Lecture uniquement sur cet appareil.</p>
+ <p>Fichier accepté : <code>iCompta_Import_REFERENCE_V10_PRIVE.json</code> ou sauvegarde iCompta Classic. Lecture uniquement sur cet appareil.</p>
  <input id="importFile" aria-label="Fichier JSON privé à importer" type="file" accept=".json,application/json" onchange="prepareImport(event)">
  <div id="importPreview" class="fieldpanel importbox">Aucun fichier sélectionné.</div>
+ <p class="smallnote">Affichage arrondi à l’euro : les centimes restent conservés dans les calculs et les sauvegardes.</p>
  <h3>2. Sauvegarde et contrôle</h3>
  <button class="softbtn wide" onclick="exportBackup()">↓ Exporter une sauvegarde JSON</button>
  <button class="softbtn wide" onclick="show('audit')">✓ Contrôler les soldes par compte</button>
