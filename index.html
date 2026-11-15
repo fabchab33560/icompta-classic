@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#345d90">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>iCompta Classic — V1.1</title>
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>iCompta Classic — V1.3</title>
 <meta name="description" content="Comptabilité personnelle hors ligne, sans compte et sans abonnement">
 <meta name="color-scheme" content="light">
 <link rel="manifest" href="./manifest.webmanifest">
@@ -203,11 +203,28 @@ body{background:#e3e3e7}
 .annual-budget .budget-columns .c:nth-child(2) strong.budget-amount.is-income {color:#23834b;}
 .annual-budget .budget-columns .c:nth-child(2) strong.budget-amount.is-expense {color:#c72d3b;}
 .annual-budget .budget-columns .c:nth-child(2) strong.budget-amount.is-zero {color:#69747f;}
+
+
+/* V1.2 — cadrage mobile : on abaisse légèrement l'interface, on évite le flou du haut et on réduit le vide du bas. */
+:root{--app-safe-top:clamp(10px, env(safe-area-inset-top, 0px), 18px);--app-safe-bottom:clamp(0px, env(safe-area-inset-bottom, 0px), 8px);}
+@media (pointer:coarse), (max-width:700px), (display-mode:standalone){
+ html,body{width:100%;height:100%;min-height:100svh;overflow:hidden;background:#f3f4f6;}
+ body{display:block;align-items:stretch;justify-content:flex-start;}
+ .device{position:fixed;inset:0;width:100vw;height:100svh;max-width:none;max-height:none;min-height:0;border:0;border-radius:0;box-shadow:none;background:#eef1f4;}
+ .status{display:none;}
+ .navbar{padding-top:var(--app-safe-top)!important;min-height:calc(49px + var(--app-safe-top))!important;}
+ .content{padding-bottom:0;}
+ .toolbar{padding-bottom:var(--app-safe-bottom)!important;min-height:calc(53px + var(--app-safe-bottom))!important;}
+}
+
+
+.field select option{font-weight:600;}
+
 </style>
 </head>
 <body>
 <div class="device" id="device" role="application" aria-label="iCompta Classic hors connexion">
- <div class="status"><span>●●● iCompta Classic</span><span>V1.1 · LOCAL ▰</span></div>
+ <div class="status"><span>●●● iCompta Classic</span><span>V1.3 · LOCAL ▰</span></div>
  <header class="navbar" id="header"></header>
  <main class="content" id="content"></main>
  <nav class="toolbar" id="toolbar" aria-label="Actions"></nav>
@@ -316,10 +333,41 @@ const clone = x => JSON.parse(JSON.stringify(x));
 const activeCategories = () => data.categories.filter(c=>c.active).sort((a,b)=>a.name.localeCompare(b.name,'fr'));
 const category = name => data.categories.find(c=>c.name===name);
 const categoryColor = name => safeHex(category(name)?.color || DEFAULT_COLORS[name] || '#8c9ba8');
+
+function colorEmojiFor(hex){
+  const h=safeHex(hex).replace('#','');
+  const r=parseInt(h.slice(0,2),16), g=parseInt(h.slice(2,4),16), b=parseInt(h.slice(4,6),16);
+  const max=Math.max(r,g,b), min=Math.min(r,g,b), d=max-min;
+  const avg=(r+g+b)/3;
+  const sat=max===0?0:d/max;
+  if(avg>235 && sat<0.12) return '⬜';
+  if(avg<45 && sat<0.18) return '⬛';
+  if(sat<0.18){
+    if(avg<110) return '⬛';
+    if(avg<190) return '◻️';
+    return '⬜';
+  }
+  let hue=0;
+  if(d===0) hue=0;
+  else if(max===r) hue=((g-b)/d)%6;
+  else if(max===g) hue=(b-r)/d+2;
+  else hue=(r-g)/d+4;
+  hue=Math.round(hue*60);
+  if(hue<0) hue+=360;
+  if((hue>=0 && hue<15) || hue>=345) return '🟥';
+  if(hue<45) return '🟧';
+  if(hue<70) return '🟨';
+  if(hue<165) return '🟩';
+  if(hue<255) return '🟦';
+  if(hue<320) return '🟪';
+  if(hue<345) return '🟫';
+  return '🔹';
+}
+
 const account = id => data.accounts.find(a=>a.id===id);
 const txFor = id => data.transactions.filter(t=>t.account===id).sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));
 const categoriesOptions = selected => [...new Set([...activeCategories().filter(x=>x.name!=='Transfert').map(x=>x.name),selected])].filter(Boolean).sort((a,b)=>a.localeCompare(b,'fr'))
-  .map(c=>`<option value="${escapeHTML(c)}" ${c===selected?'selected':''}>${escapeHTML(c)}</option>`).join('');
+  .map(c=>{ const color=categoryColor(c), chip=colorEmojiFor(color); return `<option value="${escapeHTML(c)}" style="color:${color};font-weight:600" ${c===selected?'selected':''}>${chip} ${escapeHTML(c)}</option>`; }).join('');
 const moneyBalFor = (source,a) => {
   let real=a.initial, cleared=a.initial;
   for(const t of source.transactions.filter(t=>t.account===a.id)) {
