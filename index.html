@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#345d90">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<title>iCompta Classic — V1.6</title>
+<title>iCompta Classic — V1.8</title>
 <meta name="description" content="Comptabilité personnelle hors ligne, sans compte et sans abonnement">
 <meta name="color-scheme" content="light">
 <link rel="manifest" href="./manifest.webmanifest">
@@ -297,17 +297,42 @@ body{background:#e3e3e7}
 .category-picker-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
 .category-picker-check{font-size:21px;color:#387cad;min-width:24px;text-align:right;font-weight:800}
 @media(min-width:700px){.category-picker-overlay{align-items:center}.category-picker-sheet{border-radius:16px;padding-bottom:0;max-height:80vh}}
+
+/* V1.7 — Sélecteur intégré à l'écran et prévention du zoom automatique Safari. */
+@media (pointer:coarse), (max-width:700px), (display-mode:standalone){
+ .field input:not([type="hidden"]), .field select, .field textarea,
+ .category-trigger {font-size:16px!important;}
+ .category-picker-overlay{
+   position:absolute!important;inset:0!important;
+   width:100%!important;height:100%!important;
+   max-height:none!important;overflow:hidden;
+   z-index:10000;display:flex;align-items:stretch!important;justify-content:stretch!important;
+   background:#fff;
+ }
+ .category-picker-sheet{
+   flex:1 1 auto;display:flex;flex-direction:column;
+   width:100%!important;max-width:none!important;height:100%!important;
+   min-height:0;max-height:none!important;
+   border-radius:0!important;box-shadow:none!important;
+   padding-top:var(--app-safe-top, max(56px, env(safe-area-inset-top,0px)))!important;
+   padding-bottom:var(--app-safe-bottom, max(14px, env(safe-area-inset-bottom,0px)))!important;
+ }
+ .category-picker-head{flex:none;min-height:58px;padding:9px 16px;line-height:1.25;}
+ .category-picker-head strong{font-size:17px;min-width:0;line-height:1.25;}
+ .category-picker-list{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;}
+ .category-picker-item{min-height:58px;padding:12px 16px;font-size:16px;}
+}
 </style>
 </head>
 <body>
 <div class="device" id="device" role="application" aria-label="iCompta Classic hors connexion">
- <div class="status"><span>●●● iCompta Classic</span><span>V1.6 · LOCAL ▰</span></div>
+ <div class="status"><span>●●● iCompta Classic</span><span>V1.8 · LOCAL ▰</span></div>
  <header class="navbar" id="header"></header>
  <main class="content" id="content"></main>
  <nav class="toolbar" id="toolbar" aria-label="Actions"></nav>
 </div>
 <script>'use strict';
-const APP_VERSION = '1.6';
+const APP_VERSION = '1.8';
 const KEY = 'icompta-classic-local-v08';
 const LEGACY = ['icompta-classic-local-v07','icompta-classic-local-v06']; // Les anciennes versions sont conservées en lecture seule
 const $ = id => document.getElementById(id);
@@ -431,20 +456,34 @@ function categorySelector(selected, fieldClass='category-value', fieldId=''){
 
 let categoryPickerFocus=null;
 function closeCategoryPicker(returnFocus=true){
+  if(categoryPickerOpenTimer!==null){clearTimeout(categoryPickerOpenTimer);categoryPickerOpenTimer=null;}
   const overlay=document.getElementById('categoryPickerOverlay');
   if(overlay) overlay.remove();
   const previous=categoryPickerFocus;
   categoryPickerFocus=null;
   if(returnFocus && previous?.isConnected)previous.focus({preventScroll:true});
 }
+let categoryPickerOpenTimer=null;
 function openCategoryPicker(trigger){
+  if(categoryPickerOpenTimer!==null){clearTimeout(categoryPickerOpenTimer);categoryPickerOpenTimer=null;}
   closeCategoryPicker(false);
   const box=trigger.closest('.category-selector');
   const input=box?.querySelector('input.category-value');
   if(!input)return;
+  // Dissipe le clavier numérique avant d'ouvrir la liste. Ne modifie pas le montant saisi.
+  if(document.activeElement?.blur) document.activeElement.blur();
   categoryPickerFocus=trigger;
   const selected=input.value;
-  const names=[...new Set([...activeCategories().filter(x=>x.name!=='Transfert').map(x=>x.name),selected])]
+  const openPickerPanel=()=>{
+  categoryPickerOpenTimer=null;
+  if(!trigger.isConnected || !input.isConnected || !document.getElementById('device'))return;
+  // « Alimentation » n'est plus proposée pour les transactions.
+  // Elle reste sélectionnable si on modifie une ancienne écriture déjà classée ainsi.
+  // Le budget et l'historique des catégories ne sont pas modifiés.
+  const isTransactionChoice=input.id==='tCategory';
+  const names=[...new Set([...activeCategories().filter(x=>
+      x.name!=='Transfert' && !(isTransactionChoice && x.name==='Alimentation')
+    ).map(x=>x.name),selected])]
     .filter(Boolean).sort((a,b)=>a.localeCompare(b,'fr'));
   const overlay=document.createElement('div');
   overlay.id='categoryPickerOverlay';
@@ -473,10 +512,21 @@ function openCategoryPicker(trigger){
   overlay.addEventListener('keydown',event=>{
     if(event.key==='Escape'){event.preventDefault();closeCategoryPicker();}
   });
-  document.body.appendChild(overlay);
+  // La fenêtre reste dans le cadre de l'application, sans déborder du viewport iOS.
+  document.getElementById('device').appendChild(overlay);
   const selectedRow=overlay.querySelector('.category-picker-item.selected');
-  (selectedRow||overlay.querySelector('.category-picker-item')||overlay.querySelector('[data-close]'))?.focus({preventScroll:true});
-  selectedRow?.scrollIntoView({block:'nearest'});
+  const list=overlay.querySelector('.category-picker-list');
+  if(selectedRow && list){
+    const position=[...list.children].indexOf(selectedRow);
+    list.scrollTop=Math.max(0,position*58-Math.max(0,list.clientHeight/3));
+  }
+  // Un focus automatique sur mobile peut réactiver le zoom Safari : on l'évite.
+  if(!window.matchMedia('(pointer: coarse)').matches){
+    (selectedRow||overlay.querySelector('.category-picker-item')||overlay.querySelector('[data-close]'))?.focus({preventScroll:true});
+  }
+  };
+  // Laisser l'animation de fermeture du clavier se terminer avant de montrer les catégories.
+  categoryPickerOpenTimer=window.setTimeout(openPickerPanel,200);
 }
 function updateSelectedCategoryDisplay(box,name){
   const trigger=box?.querySelector('.category-trigger');
@@ -639,12 +689,17 @@ function transactions(){
 
 function togglePoint(id){const t=data.transactions.find(x=>x.id===id);if(!t||t.status==='cancelled')return;t.status=t.status==='cleared'?'pending':'cleared';persist();render()}
 function removeTransaction(id){const t=data.transactions.find(x=>x.id===id);if(!t)return;const msg=t.transferId?'Supprimer les deux opérations liées à ce virement ?':'Supprimer cette opération ?';if(!confirm(msg))return;data.transactions=data.transactions.filter(x=>t.transferId?x.transferId!==t.transferId:x.id!==id);persist();render()}
-function startTransaction(id){const t=data.transactions.find(x=>x.id===id);if(t?.transferId){startTransfer(t.transferId);return}editingId=id;draft=t?clone(t):{id:uid(),account:accountId,label:'Nouveau',amount:0,date:today(),category:'Alimentation',kind:'',comment:'',status:'pending',recurrence:'none',repeatEnd:''};sign=draft.amount>0?'credit':'debit';show('txEditor')}
+function defaultTransactionCategory(){
+  // Utiliser la catégorie existante « Courses » (et non une nouvelle « Course »).
+  if(activeCategories().some(c=>c.name==='Courses')) return 'Courses';
+  return activeCategories().find(c=>c.name!=='Alimentation' && c.name!=='Transfert')?.name || 'Sans catégorie';
+}
+function startTransaction(id){const t=data.transactions.find(x=>x.id===id);if(t?.transferId){startTransfer(t.transferId);return}editingId=id;draft=t?clone(t):{id:uid(),account:accountId,label:'Nouveau',amount:0,date:today(),category:defaultTransactionCategory(),kind:'',comment:'',status:'cleared',recurrence:'none',repeatEnd:''};sign=draft.amount>0?'credit':'debit';show('txEditor')}
 function transactionEditor(){
   header(editingId?'Modifier':'Ajouter',nbtn('Annuler',"show('transactions')"),nbtn('Enregistrer','saveTransaction()'));
   $('content').innerHTML=`<div class="fields">
     <div class="fieldpanel">${frow('Nom',`<input id="tLabel" value="${escapeHTML(draft.label)}" onfocus="if(!editingId && this.value==='Nouveau')this.select()" oninput="matchPrevious()" placeholder="Nouveau">`)}<div id="match"></div></div>
-    <div class="fieldpanel">${frow('Montant',`<input id="tAmount" inputmode="decimal" value="${moneyInput(draft.amount)}" aria-label="Montant"><span>€</span>`)}<div class="switches"><button id="debit" onclick="setSign('debit')">Débit −</button><button id="credit" onclick="setSign('credit')">Crédit +</button></div></div>
+    <div class="fieldpanel">${frow('Montant',`<input id="tAmount" inputmode="decimal" value="${editingId?moneyInput(draft.amount):''}" placeholder="Montant en €" aria-label="Montant"><span>€</span>`)}<div class="switches"><button id="debit" onclick="setSign('debit')">Débit −</button><button id="credit" onclick="setSign('credit')">Crédit +</button></div></div>
     <div class="fieldpanel">${frow('Date',`<input type="date" id="tDate" value="${escapeHTML(draft.date)}">`)}${frow('Statut',`<select id="tStatus"><option value="pending">En attente</option><option value="cleared">Pointée</option><option value="cancelled">Annulée</option></select>`)}${frow('Catégorie',categorySelector(draft.category,'','tCategory'))}</div>
     <div class="fieldpanel">${frow('Fréquence',`<select id="tRepeat" onchange="updateRepeatEnd()"><option value="none">Aucune</option><option value="monthly">Tous les mois</option><option value="fourweeks">Toutes les 4 semaines</option></select>`)}</div>
     <div id="repeatEndArea" class="fieldpanel" style="display:none">${frow('Créer avant',`<select id="tRepeatNotice"><option value="month">Un mois avant</option><option value="week">Une semaine avant</option><option value="fourweeks">Quatre semaines avant</option></select>`)}${frow('Fin (facultatif)',`<input type="date" id="tRepeatEnd" value="${escapeHTML(draft.repeatEnd||'')}">`)}</div>
