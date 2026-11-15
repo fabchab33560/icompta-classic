@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#345d90">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>iCompta Classic — V0.8</title>
+<title>iCompta Classic — V0.9</title>
 <meta name="description" content="Comptabilité personnelle hors ligne, sans compte et sans abonnement">
 <meta name="color-scheme" content="light">
 <link rel="manifest" href="./manifest.webmanifest">
@@ -37,7 +37,7 @@ button,input,select,textarea {font:inherit;} button {cursor:pointer;} button:dis
 .subbar select,.subbar input {font-size:12px;max-width:53%;padding:5px 4px;border-radius:5px;border:1px solid #afc3d5;background:white;color:#334960}
 .month{background:linear-gradient(#aebfd2,#748ba6);color:#fff;text-shadow:0 -1px #59708a;font-size:12px;font-weight:700;padding:7px 10px}
 .txrow {display:flex;align-items:stretch;min-height:63px;background:white;border-bottom:1px solid #e1e5ea;}.txrow:active{background:#eff6ff}.txaccent{width:5px;background:#d48db2;margin:5px 0}.txaccent.credit{background:#6ca0ba}.txstatus{border:0;min-width:34px;background:transparent;font-size:19px;color:#8498ad}.txstatus.done{color:#3b7d9b}.txstatus.cancelled{color:#aaa}
-.txinfo{flex:1;display:flex;align-items:center;justify-content:space-between;gap:5px;border:0;text-align:left;background:transparent;min-width:0;padding:8px 6px 8px 0;color:#1f252c}.txtext{min-width:0;flex:1}.txlabel{display:block;font-size:14px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.txmeta{display:block;font-size:10px;color:#7a8592;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.txmoney{text-align:right;white-space:nowrap}.txbalance{font-size:10px;color:#8c969e}.txamount{font-size:13px;font-weight:750;color:#d53038;margin-top:5px}.txamount.credit{color:#318251}.txrow.cancelled .txlabel{text-decoration:line-through;color:#999}.txarrow{color:#6793bc;font-size:20px;padding:0 5px}
+.txinfo{flex:1;display:flex;align-items:center;justify-content:space-between;gap:5px;border:0;text-align:left;background:transparent;min-width:0;padding:8px 6px 8px 0;color:#1f252c}.txtext{min-width:0;flex:1}.txlabel{display:block;font-size:14px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.txmeta{display:block;font-size:10px;color:#7a8592;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.txmoney{text-align:right;white-space:nowrap;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;min-width:116px;padding-right:2px}.txbalance{font-size:11px;color:#8c969e;line-height:1.15;font-variant-numeric:tabular-nums}.txamount{font-size:16px;font-weight:750;color:#d53038;margin-top:2px;line-height:1.15;font-variant-numeric:tabular-nums}.txamount.credit{color:#318251}.txrow.cancelled .txlabel{text-decoration:line-through;color:#999}.txarrow{color:#6793bc;font-size:20px;padding:0 5px}
 .fields{padding:2px 8px 14px}.fieldpanel{background:#fff;border:1px solid #a6b4c1;border-radius:10px;overflow:hidden;margin:12px 0}.field{min-height:49px;display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid #e3e6ea}.field:last-child{border:0}.field label{width:100px;flex:none;color:#4267a0;font-size:12px;text-align:right}.field input,.field select,.field textarea{min-width:0;flex:1;border:0;background:#fff;color:#28313a;outline:none;padding:7px 1px}.field input:focus,.field select:focus,.field textarea:focus{outline:2px solid #a0c9ed;border-radius:2px}.field textarea{resize:vertical;min-height:48px}
 .switches {display:flex;gap:5px;padding:9px}.switches button{flex:1;padding:8px 6px;border-radius:7px;border:1px solid #aebdca;background:linear-gradient(#fff,#e2eaf1);color:#374f66;font-size:12px}.switches button.active{background:linear-gradient(#8db2d8,#416da0);color:#fff;font-weight:bold;border-color:#325e91}.hint{padding:6px 11px;background:#f4faff;color:#356597;font-size:12px}.hint button,.textbtn{background:transparent;border:0;color:#2c6093;font-size:12px;text-decoration:underline;padding:5px}
 .inline-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px}.softbtn{background:linear-gradient(#fff,#e4ecf3);border:1px solid #aabac9;border-radius:7px;padding:8px 10px;color:#355b80;font-weight:600;font-size:12px}.danger{width:calc(100% - 16px);margin:12px 8px;background:#fff;color:#c23138;border:1px solid #d3b8bc;border-radius:8px;padding:12px;font-weight:600}.error{font-size:12px;color:#bc2432;text-align:center;min-height:12px;padding:0 5px}.empty {padding:28px 10px;text-align:center;color:#718395}
@@ -132,8 +132,8 @@ body{background:#e3e3e7}
 .txinfo{order:0;padding:8px 1px 8px 9px}
 .txlabel{font-size:16px;font-weight:500;color:#41484c}
 .txmeta{font-size:11px;color:#a1a7ad;margin-top:6px}
-.txbalance{font-size:11px;color:#8b9299}
-.txamount{font-size:16px;font-weight:750;margin-top:3px;color:#d02430}
+.txbalance{font-size:12px;color:#8b9299;line-height:1.1;font-variant-numeric:tabular-nums}
+.txamount{font-size:18px;font-weight:750;margin-top:2px;color:#d02430;line-height:1.1;font-variant-numeric:tabular-nums}
 .txamount.credit{color:#33904f}
 .txarrow{font-size:24px;color:#bac6d2}
 .schedule-search{width:calc(100% - 18px);margin:9px;border-radius:7px;border:1px solid #dce2e6;background:white;font-size:14px;padding:10px;outline-color:#8caec8}
@@ -147,18 +147,16 @@ body{background:#e3e3e7}
 .annual-budget{background:#fff;min-height:100%;padding-bottom:18px}
 .annual-budget .pickerrow{background:linear-gradient(#fff,#f8f9fa);color:#393e45;border-bottom:1px solid #e6e8eb}
 .annual-budget .pickerrow strong{font-size:18px}
-.budget-overview{padding:9px 12px 6px;border-bottom:1px solid #e2e4e7;background:#fff}
+.budget-overview{padding:9px 12px 4px;border-bottom:0;background:#fff}
 .budget-total{font-size:17px;font-weight:800;color:#242a31;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
-.budget-caption{font-size:11px;color:#818b94;line-height:1.55;padding-top:4px}
-.budget-category{padding:5px 10px 8px;background:#fff;border-bottom:1px solid #e8ebed}
-.budget-catname{font-size:14px;font-weight:500;color:#555d66;padding:2px 0 6px}
+.budget-caption{display:none}
+.budget-category{padding:4px 10px 8px;background:#fff;border-bottom:1px solid #e8ebed}
+.budget-catname{font-size:14px;font-weight:500;color:#555d66;padding:2px 0 5px}
 .budget-meter{height:24px;position:relative;background:linear-gradient(#f7f8f9,#ebedef);border:1px solid #aeb8c1;box-shadow:inset 0 1px 3px #5555;overflow:hidden;display:flex;width:100%;border-radius:1px}
 .budget-meter-real{height:100%;position:relative;display:flex;align-items:center;justify-content:center;white-space:nowrap;color:#fff;font-weight:750;text-shadow:0 1px #0005;font-size:13px;background:var(--cat);box-shadow:inset 0 3px #ffffff33,inset 0 -3px #00000020;min-width:0;overflow:hidden;}
 .budget-meter-future{height:100%;position:relative;display:flex;align-items:center;justify-content:center;white-space:nowrap;color:#3c4350;font-size:12px;font-weight:700;background:var(--softcat);border-left:1px solid #343a4122;min-width:0;overflow:hidden}
 .budget-meter-rest{flex:1;min-width:0;display:flex;justify-content:flex-end;align-items:center;padding-right:5px;color:#6d757f;font-size:11px;white-space:nowrap;font-weight:700;overflow:hidden}
 .budget-tick{position:absolute;top:0;height:100%;width:2px;background:#656a70;transform:translateX(-1px);pointer-events:none;opacity:.5}
-.budget-remaining-line{font-size:10px;color:#7a8590;text-align:right;padding:4px 1px 0;font-variant-numeric:tabular-nums}
-.budget-remaining-line.over{color:#bc3439;font-weight:700}
 .budget-columns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;padding-top:7px;font-size:11px}
 .budget-columns .c{min-width:0}
 .budget-columns .c:nth-child(2){text-align:center}
@@ -447,7 +445,7 @@ function transactions(){
     <button class="txinfo" onclick="startTransaction('${t.id}')" aria-label="Modifier ${escapeHTML(t.label)}"><span class="txtext">
      <span class="txlabel">${t.transferId?'⇄ ':''}${escapeHTML(t.label)}</span>
      <span class="txmeta">${t.status==='cleared'?'●':t.status==='pending'?'◌':'×'} ${escapeHTML(dateLabel(t.date))}${escapeHTML(rec)}</span>
-    </span><span class="txmoney"><span class="txbalance">${euro(r[t.id])}</span><span class="txamount ${t.amount>=0?'credit':''}">${euro(t.amount)}</span><span class="schedule-account">${escapeHTML(t.category)}</span></span><span class="txarrow">›</span></button>
+    </span><span class="txmoney"><span class="txbalance">${euro(r[t.id])}</span><span class="txamount ${t.amount>=0?'credit':''}">${euro(t.amount)}</span></span><span class="txarrow">›</span></button>
     <button class="txstatus ${t.status==='cleared'?'done':''}" onclick="${editMode?`removeTransaction('${t.id}')`:`togglePoint('${t.id}')`}" ${t.status==='cancelled'&&!editMode?'disabled':''} aria-label="${editMode?'Supprimer':t.status==='cleared'?'Dépointer':'Pointer'} ${escapeHTML(t.label)}">${editMode?'✕':t.status==='cleared'?'✓':'○'}</button></div>`;
  }
  if(!current.length)html+='<div class="empty">Aucune opération pour ce filtre.</div>';
@@ -599,20 +597,19 @@ function budgetScreen(){
  const card=l=>{
   const color=categoryColor(l.category),real=Math.max(0,l.cleared),unpointed=Math.max(0,l.forecast-l.cleared),planned=Math.max(0,l.amount);
   const realP=planned?100*real/planned:real?100:0,pendingP=planned?100*unpointed/planned:unpointed?100:0;
-  const realW=Math.min(100,realP),pendingW=Math.min(100-realW,pendingP),remainder=planned-l.forecast;
-  const restW=Math.max(0,100-realW-pendingW),totalP=realP+pendingP;
-  const leftOver=totalP>100.0001;
+  const realW=Math.min(100,realP),pendingW=Math.min(Math.max(0,100-realW),pendingP),remainingP=Math.max(0,100-realP-pendingP);
   const isIncome=l.side==='income',base=isIncome?'Revenus':'Dépenses';
-  const p1=realW>=12?`${Math.round(realP)} %`:'',p2=pendingW>=10?`${Math.round(pendingP)} %`:'';
+  const p1=realW>=10?`${Math.round(realP)} %`:'';
+  const p2=pendingW>=9?`${Math.round(pendingP)} %`:'';
+  const p3=remainingP>=8?`${Math.round(remainingP)} %`:'';
   return `<div class="budget-category" aria-label="Catégorie ${escapeHTML(l.category)}">
     <div class="budget-catname">${escapeHTML(l.category)}</div>
-    <div class="budget-meter" role="img" aria-label="${Math.round(realP)} pour cent pointés, ${Math.round(pendingP)} pour cent prévus sur le budget">
+    <div class="budget-meter" role="img" aria-label="${Math.round(realP)} pour cent pointés, ${Math.round(pendingP)} pour cent prévus et ${Math.max(0,Math.round(remainingP))} pour cent restants sur le budget">
        <div class="budget-meter-real" style="width:${realW.toFixed(3)}%;--cat:${color}">${p1}</div>
        <div class="budget-meter-future" style="width:${pendingW.toFixed(3)}%;--softcat:${mixWhite(color,.56)}">${p2}</div>
-       <div class="budget-meter-rest">${!leftOver && restW>=24?euro(remainder):''}</div>
+       <div class="budget-meter-rest">${p3}</div>
        <div class="budget-tick" style="left:${Math.min(100,realW+pendingW).toFixed(3)}%"></div>
     </div>
-    <div class="budget-remaining-line ${leftOver?'over':''}">${leftOver?'Dépassement : '+euro(-remainder):'Reste : '+euro(remainder)}</div>
     <div class="budget-columns"><div class="c"><span>${base}</span><strong>${euro(real)}</strong></div>
       <div class="c"><span>${isIncome?'Revenus prévus':'Dépenses prévues'}</span><strong>${euro(unpointed)}</strong></div>
       <div class="c"><span>${isIncome?'Revenus budgétés':'Dépenses budgétées'}</span><strong>${euro(planned)}</strong></div></div>
@@ -620,14 +617,13 @@ function budgetScreen(){
  };
  const sectionHtml=(side,rows)=>{
   const rev=side==='income',label=rev?'Revenus':'Dépenses',pointed=total(rows,'cleared'),pred=total(rows,'forecast'),budget=total(rows,'amount');
-  return `<section class="budget-section"><div class="budget-overview"><div class="budget-total">${label} : ${euro(pred)} / ${euro(budget)}</div>
-    <div class="budget-caption">${euro(pointed)} pointés · ${euro(pred-pointed)} prévus · ${euro(budget-pred)} restant</div></div>
+  return `<section class="budget-section"><div class="budget-overview"><div class="budget-total">${label} : ${euro(pred)} / ${euro(budget)}</div></div>
     ${rows.length?rows.map(card).join(''):'<div class="empty">Aucune catégorie '+(rev?'de revenu':'de dépense')+' définie.</div>'}</section>`;
  };
  $('content').innerHTML=`<div class="annual-budget">
    <div class="pickerrow"><button aria-label="Année précédente" onclick="budgetYear--;render()">‹</button><strong>${budgetYear}</strong><button aria-label="Année suivante" onclick="budgetYear++;render()">›</button></div>
    ${sectionHtml('income',incomes)}${sectionHtml('expense',expenses)}
-   <p class="budget-mininote">Dans cette reproduction : « Dépenses / Revenus » = opérations pointées ; « prévus » = opérations en attente et échéances futures non encore enregistrées ; « budgétés » = plafond annuel. Les virements internes sont exclus du budget.</p>
+   <p class="budget-mininote">Présentation rapprochée d’iCompta 2 : pour chaque catégorie, la barre montre les montants pointés, prévus et le pourcentage restant. Les virements internes sont exclus du budget.</p>
    </div>`;
  $('toolbar').innerHTML=btn('Accueil','⌂',"show('home')")+btn('Échéancier','▦',"show('schedule')")+btn('Catégories','◈',"show('categories')")+btn('Modifier','✎','startBudgetEditor()');
 }
@@ -797,7 +793,7 @@ function enableRecurrences(){
 function info(){
  header('Données locales',nbtn('‹ iCompta',"show('home')"),'');
  const recent=readHistory().map((x,i)=>`<button class="softbtn wide" onclick="restoreRecentState(${i})">↶ État de secours ${i+1} · ${escapeHTML(new Date(x.at).toLocaleString('fr-FR'))}</button>`).join('');
- $('content').innerHTML=`<div class="info"><h3>iCompta Classic · V0.8 locale</h3>
+ $('content').innerHTML=`<div class="info"><h3>iCompta Classic · V0.9 locale</h3>
  <p><strong>${data.isRealData?'Comptabilité importée':'Démonstration avec montants fictifs'}</strong>. Aucune connexion bancaire, aucun abonnement. Les données sont conservées dans le navigateur de cet appareil.</p>
  ${migratedFrom?'<p class="smallnote">Une précédente version a été détectée. La sauvegarde V0.7 reste inchangée.</p>':''}
  <p class="smallnote warning">Prototype non audité. Le stockage du navigateur peut être effacé. Les fichiers JSON exportés ne sont pas chiffrés : garde-les dans un endroit privé.</p>
