@@ -1,0 +1,843 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#345d90">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>iCompta Classic — V0.8</title>
+<meta name="description" content="Comptabilité personnelle hors ligne, sans compte et sans abonnement">
+<meta name="color-scheme" content="light">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icone-192.png">
+<style>
+:root { color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif; color:#222; font-size:14px; --nav:#355e91; --line:#d6dce2; }
+* {box-sizing:border-box} html,body {margin:0;min-height:100%;} body {background:#dee5ec;display:flex;align-items:center;justify-content:center;min-height:100dvh;}
+button,input,select,textarea {font:inherit;} button {cursor:pointer;} button:disabled {opacity:.5;cursor:not-allowed;}
+.device {width:min(100%,440px);height:min(920px,96dvh);min-height:540px;display:flex;flex-direction:column;overflow:hidden;border:1px solid #8296aa;border-radius:26px;box-shadow:0 14px 50px #20354b4f;background:#dae0e6;position:relative;}
+.status {flex:none;height:26px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;background:linear-gradient(#d2dfe9,#b8cadd);color:#264767;font-size:11px;font-weight:700;}
+.navbar {flex:none;min-height:49px;display:grid;grid-template-columns:94px minmax(0,1fr) 94px;align-items:center;padding:0 6px;color:white;background:linear-gradient(#a5bfdc 0%,#6f94bd 47%,#325b90 100%);border-bottom:1px solid #1e456f;text-shadow:0 -1px #29446b;box-shadow:inset 0 1px #fff8;}
+.navbar h1 {margin:0;text-align:center;font-size:18px;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.navbar .navright {display:flex;justify-content:flex-end}.navbtn {border:1px solid #31567e;min-height:30px;border-radius:6px;background:linear-gradient(#95b7da,#3c689e);color:#fff;font-weight:600;font-size:12px;padding:5px 9px;text-shadow:0 -1px #315479;box-shadow:inset 0 1px #ffffffa0;}
+.navbtn:active {filter:brightness(.87)}
+.content {flex:1 1 0;min-height:0;overflow:auto;overscroll-behavior:contain;background:repeating-linear-gradient(90deg,#d7dde4 0,#d7dde4 2px,#e2e7ec 3px,#e2e7ec 5px);scrollbar-width:thin;}
+.toolbar {flex:none;min-height:53px;display:flex;align-items:stretch;justify-content:space-around;background:linear-gradient(#9db9d6,#3c6598);border-top:1px solid #e7f3ff;box-shadow:0 -1px #355a88;}
+.toolbar button {flex:1;min-width:0;border:0;border-right:1px solid #28538282;background:transparent;color:white;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:3px;text-shadow:0 -1px #2b4b6e;padding:4px 0;}
+.toolbar button:active {background:#31567a}.toolbar b{font-size:21px;line-height:20px}.toolbar small{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;padding:0 2px}
+.notice {font-size:10px;text-align:center;color:#566b7d;font-weight:750;margin:10px 10px 11px;letter-spacing:.15px}
+.group {margin:9px 8px 16px}.group h2 {font-size:14px;color:#384c62;margin:0 7px 5px;text-shadow:0 1px #fff;}
+.panel {border:1px solid #a5b1bd;border-radius:11px;background:#fff;overflow:hidden;box-shadow:0 1px 1px #60718538}.listrow {border:0;border-bottom:1px solid #dfe4e8;display:flex;align-items:center;width:100%;min-height:58px;padding:8px 9px;background:#fff;color:#1d252c;text-align:left;gap:9px}.listrow:last-child{border-bottom:0}.listrow:active {background:#e6f1fa}
+.accounticon {flex:none;height:33px;width:33px;border-radius:5px;display:grid;place-items:center;font-weight:bold;color:white;font-size:20px;}
+.rowmain {flex:1;min-width:0}.rowmain strong {font-size:14px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rowsub {font-size:10px;color:#5f6b77;line-height:1.35;margin-top:4px;overflow:hidden;text-overflow:ellipsis}.chevron{color:#8295a9;font-size:24px;line-height:20px;}
+.placeholder {padding:18px 12px;color:#758595;text-align:center;font-size:12px;line-height:1.5}
+.footertext{font-size:11px;text-align:center;color:#6f7d89;margin:12px 18px 20px;line-height:1.5}
+.summary {display:flex;justify-content:space-between;align-items:center;gap:12px;background:linear-gradient(#fff,#edf2f7);padding:11px 12px;border-bottom:1px solid #aebccb}.summary strong{font-size:14px}.summary .tiny{font-size:11px;color:#657480;margin-top:4px}.summary .balance{font-size:15px;white-space:nowrap;font-weight:800}
+.subbar{display:flex;align-items:center;justify-content:space-between;gap:5px;padding:7px 9px;background:linear-gradient(#e7f1fb,#cdddea);color:#375673;border-bottom:1px solid #b3c5d7;font-size:11px;font-weight:600}
+.subbar select,.subbar input {font-size:12px;max-width:53%;padding:5px 4px;border-radius:5px;border:1px solid #afc3d5;background:white;color:#334960}
+.month{background:linear-gradient(#aebfd2,#748ba6);color:#fff;text-shadow:0 -1px #59708a;font-size:12px;font-weight:700;padding:7px 10px}
+.txrow {display:flex;align-items:stretch;min-height:63px;background:white;border-bottom:1px solid #e1e5ea;}.txrow:active{background:#eff6ff}.txaccent{width:5px;background:#d48db2;margin:5px 0}.txaccent.credit{background:#6ca0ba}.txstatus{border:0;min-width:34px;background:transparent;font-size:19px;color:#8498ad}.txstatus.done{color:#3b7d9b}.txstatus.cancelled{color:#aaa}
+.txinfo{flex:1;display:flex;align-items:center;justify-content:space-between;gap:5px;border:0;text-align:left;background:transparent;min-width:0;padding:8px 6px 8px 0;color:#1f252c}.txtext{min-width:0;flex:1}.txlabel{display:block;font-size:14px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.txmeta{display:block;font-size:10px;color:#7a8592;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.txmoney{text-align:right;white-space:nowrap}.txbalance{font-size:10px;color:#8c969e}.txamount{font-size:13px;font-weight:750;color:#d53038;margin-top:5px}.txamount.credit{color:#318251}.txrow.cancelled .txlabel{text-decoration:line-through;color:#999}.txarrow{color:#6793bc;font-size:20px;padding:0 5px}
+.fields{padding:2px 8px 14px}.fieldpanel{background:#fff;border:1px solid #a6b4c1;border-radius:10px;overflow:hidden;margin:12px 0}.field{min-height:49px;display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid #e3e6ea}.field:last-child{border:0}.field label{width:100px;flex:none;color:#4267a0;font-size:12px;text-align:right}.field input,.field select,.field textarea{min-width:0;flex:1;border:0;background:#fff;color:#28313a;outline:none;padding:7px 1px}.field input:focus,.field select:focus,.field textarea:focus{outline:2px solid #a0c9ed;border-radius:2px}.field textarea{resize:vertical;min-height:48px}
+.switches {display:flex;gap:5px;padding:9px}.switches button{flex:1;padding:8px 6px;border-radius:7px;border:1px solid #aebdca;background:linear-gradient(#fff,#e2eaf1);color:#374f66;font-size:12px}.switches button.active{background:linear-gradient(#8db2d8,#416da0);color:#fff;font-weight:bold;border-color:#325e91}.hint{padding:6px 11px;background:#f4faff;color:#356597;font-size:12px}.hint button,.textbtn{background:transparent;border:0;color:#2c6093;font-size:12px;text-decoration:underline;padding:5px}
+.inline-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px}.softbtn{background:linear-gradient(#fff,#e4ecf3);border:1px solid #aabac9;border-radius:7px;padding:8px 10px;color:#355b80;font-weight:600;font-size:12px}.danger{width:calc(100% - 16px);margin:12px 8px;background:#fff;color:#c23138;border:1px solid #d3b8bc;border-radius:8px;padding:12px;font-weight:600}.error{font-size:12px;color:#bc2432;text-align:center;min-height:12px;padding:0 5px}.empty {padding:28px 10px;text-align:center;color:#718395}
+.report-header{padding:10px 12px;background:#fff;border-bottom:1px solid #c5d1dd;font-weight:700;color:#2e4d68}.reportrow{padding:10px 10px 12px;background:#fff;border-bottom:1px solid #e1e5ea}.reportname{display:flex;justify-content:space-between;gap:6px;font-size:14px;font-weight:650;margin-bottom:7px}.reportnums{display:flex;justify-content:space-between;gap:5px;font-size:10px;color:#667483;margin-top:6px;flex-wrap:wrap}.progress{height:12px;border-radius:2px;background:#f0f3f4;border:1px solid #bec7cf;overflow:hidden}.progress>span{display:block;height:100%;background:linear-gradient(#8dc959,#5aa435);min-width:0}.progress>span.warn{background:linear-gradient(#f9b07d,#df6c38)}.progress>span.income{background:linear-gradient(#aad67e,#6cb244)}
+.totals{padding:14px 12px;background:#f9fcff;border-bottom:1px solid #c8d4df;display:flex;justify-content:space-between;gap:8px}.totals>div{flex:1;text-align:center}.totals small{display:block;color:#728092;font-size:10px;margin-bottom:4px}.totals b{font-size:15px}
+.pickerrow {display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#f9fcff;gap:8px;border-bottom:1px solid #c7d3df}.pickerrow button {min-width:34px;border:1px solid #a3b9cb;background:#fff;border-radius:5px;padding:7px;color:#3a6293;font-size:14px}.pickerrow strong{font-size:12px;text-align:center}
+.chartbox{background:#fff;border-radius:11px;border:1px solid #a5b2bf;margin:12px 8px;padding:12px;overflow:hidden}.chartbox svg{width:100%;display:block;max-height:295px}.chartbox h3{font-size:14px;text-align:center;margin:0 0 8px;color:#39516b}.chart-legend{display:grid;grid-template-columns:1fr 1fr;gap:7px 9px;margin:10px 0 2px;font-size:11px}.legenditem{display:flex;align-items:center;gap:5px;min-width:0}.swatch{display:inline-block;width:11px;height:11px;border-radius:2px;flex:none}.legenditem span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.chart-summary{text-align:center;font-size:13px;color:#495d72;margin:10px 5px;font-weight:650}
+.budget-line{display:grid;grid-template-columns:1fr 75px 87px 28px;align-items:center;gap:5px;padding:7px 6px;border-bottom:1px solid #e5ebee}.budget-line>*{min-width:0}.budget-line select,.budget-line input{width:100%;border:1px solid #cbd5df;border-radius:4px;padding:7px 4px;background:#fff;font-size:11px}.budget-line button{background:white;color:#a32a2e;border:1px solid #d8c4c8;border-radius:4px;padding:4px}
+.accountchecks{padding:9px 13px;display:grid;gap:11px}.accountchecks label{display:flex;align-items:center;gap:9px;color:#34495b;font-size:13px}.accountchecks input{width:17px;height:17px}
+.info{padding:12px 17px;color:#344c65;line-height:1.6}.info h3{margin:10px 0}.info p{margin:9px 0}.info code{font-size:12px}.muted{color:#758696}.smallnote{font-size:11px;color:#687888;line-height:1.5;padding:8px 10px}
+@media(max-width:700px), (display-mode:standalone) {
+ html,body{width:100%;height:100%;min-height:0;background:#d9e2ea;}
+ .device{width:100vw;height:100dvh;max-width:none;max-height:none;min-height:0;border:0;border-radius:0;box-shadow:none;}
+ .status{display:none}
+ .navbar{padding-top:env(safe-area-inset-top);min-height:calc(49px + env(safe-area-inset-top));}
+ .toolbar{padding-bottom:env(safe-area-inset-bottom);min-height:calc(53px + env(safe-area-inset-bottom));}
+}
+@media(max-width:360px){.navbar{grid-template-columns:79px minmax(0,1fr) 79px}.navbtn{padding:5px 6px}.field label{width:85px}.budget-line{grid-template-columns:1fr 63px 72px 26px}.toolbar small{font-size:9px}}
+@media(prefers-reduced-motion:no-preference){button{transition:filter .1s}}
+
+/* V0.4 · recurring transactions / dual budget indicators */
+.catname{display:inline-flex;align-items:center;gap:8px;min-width:0}
+.swatch{display:inline-block;flex:none;width:12px;height:12px;border-radius:3px;vertical-align:middle;border:1px solid #344c5930}
+.swatch.big{width:24px;height:24px;border-radius:5px}
+.remaining{font-size:11px;white-space:nowrap;color:#516476}
+.reportname{align-items:center}
+.budget-line{display:grid;grid-template-columns:14px minmax(50px,1fr) 76px 82px 27px;gap:4px;align-items:center}
+.budget-line select,.budget-line input{max-width:100%;min-width:0;font-size:12px;padding:7px 2px}
+.budget-line .removeLine{color:#c14b4b;border:0;background:none;font-weight:bold;font-size:17px}
+.danger-inline{color:#c43541}
+.field input[type=color]{height:35px;min-width:58px;max-width:90px;border:1px solid #9fb1c3;border-radius:5px;padding:1px}
+.warning{color:#aa342e}
+@media(max-width:360px){.budget-line{grid-template-columns:12px minmax(55px,1fr) 65px 68px 23px;gap:3px}}
+
+.dual-report{padding:12px 11px 14px}
+.dual-row{margin-top:9px}
+.dual-label{display:flex;justify-content:space-between;align-items:center;color:#43566b;font-size:12px;padding:2px 0}
+.dual-label b{font-size:13px;color:#202c3d;font-variant-numeric:tabular-nums}
+.progress.slim{height:7px;margin-top:4px}
+.dual-report .reportnums{margin-top:9px;flex-wrap:wrap;gap:3px;font-size:10px}
+.recurring-badge{color:#326394;font-weight:bold;font-size:16px;vertical-align:middle}
+.softbtn.wide{display:block;width:calc(100% - 24px);margin:12px auto;background:white;padding:12px}
+#repeatEndArea .field{min-height:52px}
+
+/* Plein écran iPhone Air, agrandissement clavier et barres système prises en charge */
+html{overscroll-behavior:none}body{overflow:hidden}
+button, input, select{touch-action:manipulation}
+.importbox{padding:13px;line-height:1.6;font-size:12px;overflow-wrap:anywhere}
+.info input[type=file]{background:white;border:1px solid #adbac7;border-radius:8px;padding:12px;max-width:100%;width:100%;font-size:12px}
+@media(max-width:700px), (display-mode:standalone){
+  .device{height:100dvh;width:100vw;max-height:none;max-width:none;min-height:0;border-radius:0;border:none;box-shadow:none}
+  .navbar{padding-top:env(safe-area-inset-top,0px)}
+  .content{overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch}
+  .toolbar{padding-bottom:env(safe-area-inset-bottom,0px)}
+}
+
+/* V0.7 : aspect construit à partir des photographies fournies d'iCompta 2 */
+:root{--vintage-blue:#7e9fb8;--vintage-title:#262e38;}
+body{background:#e3e3e7}
+.device{background:#f9fafc}
+.status{background:#f6f7f9;color:#7b8895;font-weight:500;border-bottom:1px solid #e4e6e8}
+.navbar{background:linear-gradient(#fff,#f6f7f8);box-shadow:none;border-bottom:1px solid #d9dde2;color:var(--vintage-title);text-shadow:none}
+.navbar h1{font-size:19px;font-weight:700}
+.navbtn{background:none;border:0;box-shadow:none;text-shadow:none;color:#87a7c4;font-size:14px;font-weight:500;padding:5px 3px;text-align:left}
+.navbar .navright .navbtn{text-align:right}
+.content{background:repeating-linear-gradient(0deg,#f5f6f7 0,#f5f6f7 2px,#fbfbfc 2px,#fbfbfc 4px)}
+.group{margin:0 0 12px}
+.group h2{font-size:14px;font-weight:500;text-transform:uppercase;text-shadow:none;letter-spacing:.35px;background:#edf0f3;color:#89939d;margin:0;padding:10px 14px 8px;border-top:1px solid #dde1e5;border-bottom:1px solid #dde1e5}
+.panel{border:0;border-radius:0;box-shadow:none;background:white}
+.listrow{min-height:67px;padding:7px 13px;border-bottom:1px solid #e5e6e9;gap:10px}
+.rowmain strong{font-size:17px;font-weight:500}
+.rowsub{font-size:12px;color:#7d8993;margin-top:3px}
+.accounticon{width:34px;height:35px;border-radius:0;background:none!important;color:#7494ac;font-size:26px}
+.chevron{color:#c2c7ce;font-size:30px;font-weight:200}
+.toolbar{background:linear-gradient(#f5f6f8,#eef1f3);border-top:1px solid #dadee3;box-shadow:none;min-height:58px}
+.toolbar button{color:#7e9db9;text-shadow:none;border-right:0}
+.toolbar b{font-size:24px;line-height:26px}
+.toolbar small{font-size:10px}
+.notice{margin:0;padding:8px 12px;font-size:10px;color:#7c878f;font-weight:500;background:#fafafa;border-bottom:1px solid #e3e5e7}
+.home-total{background:#f6f7f8;color:#7e8690;padding:9px 16px;font-size:13px;border-bottom:1px solid #e1e3e6;font-variant-numeric:tabular-nums}
+.home-lead{color:#748aa1;font-weight:500}
+.home-sub{color:#8b929b;font-size:12px}
+.month{background:#e4e8eb;color:#292f36;font-weight:700;text-shadow:none;font-size:16px;padding:8px 13px;border-top:1px solid #d6dae0}
+.summary{background:#fff;color:#777;padding:6px 12px;font-size:12px}
+.summary .balance{color:#3e4751}
+.summary strong{color:#7b8590}
+.subbar{background:#f1f3f5;color:#7a8794;border-bottom:1px solid #dce1e5}
+.txrow{min-height:73px;background:linear-gradient(#fff,#fefefe)}
+.txaccent{width:7px;margin:0;flex:none}
+.txstatus{min-width:28px;font-size:17px;color:#aab3bc;order:1;padding:0 1px}
+.txstatus.done{color:#707982}
+.txinfo{order:0;padding:8px 1px 8px 9px}
+.txlabel{font-size:16px;font-weight:500;color:#41484c}
+.txmeta{font-size:11px;color:#a1a7ad;margin-top:6px}
+.txbalance{font-size:11px;color:#8b9299}
+.txamount{font-size:16px;font-weight:750;margin-top:3px;color:#d02430}
+.txamount.credit{color:#33904f}
+.txarrow{font-size:24px;color:#bac6d2}
+.schedule-search{width:calc(100% - 18px);margin:9px;border-radius:7px;border:1px solid #dce2e6;background:white;font-size:14px;padding:10px;outline-color:#8caec8}
+.schedule-top{display:flex;justify-content:space-between;gap:12px;padding:9px 13px;color:#7c838c;background:#f8f9fa;font-size:12px;border-bottom:1px solid #e0e3e5}
+.schedule-summary{margin:0;padding:9px 12px 3px;background:#fff;color:#7b8490;font-size:12px;text-align:center}
+.schedule-account{font-size:11px;color:#848b92}
+.schedule-item{min-height:65px}
+.schedule-term{font-size:10px;color:#a0a9b2}
+.schedule-note{padding:11px 14px;color:#71808c;font-size:11px;line-height:1.55}
+/* Budget annuel inspiré de la photo : une barre par catégorie et trois montants */
+.annual-budget{background:#fff;min-height:100%;padding-bottom:18px}
+.annual-budget .pickerrow{background:linear-gradient(#fff,#f8f9fa);color:#393e45;border-bottom:1px solid #e6e8eb}
+.annual-budget .pickerrow strong{font-size:18px}
+.budget-overview{padding:9px 12px 6px;border-bottom:1px solid #e2e4e7;background:#fff}
+.budget-total{font-size:17px;font-weight:800;color:#242a31;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.budget-caption{font-size:11px;color:#818b94;line-height:1.55;padding-top:4px}
+.budget-category{padding:5px 10px 8px;background:#fff;border-bottom:1px solid #e8ebed}
+.budget-catname{font-size:14px;font-weight:500;color:#555d66;padding:2px 0 6px}
+.budget-meter{height:24px;position:relative;background:linear-gradient(#f7f8f9,#ebedef);border:1px solid #aeb8c1;box-shadow:inset 0 1px 3px #5555;overflow:hidden;display:flex;width:100%;border-radius:1px}
+.budget-meter-real{height:100%;position:relative;display:flex;align-items:center;justify-content:center;white-space:nowrap;color:#fff;font-weight:750;text-shadow:0 1px #0005;font-size:13px;background:var(--cat);box-shadow:inset 0 3px #ffffff33,inset 0 -3px #00000020;min-width:0;overflow:hidden;}
+.budget-meter-future{height:100%;position:relative;display:flex;align-items:center;justify-content:center;white-space:nowrap;color:#3c4350;font-size:12px;font-weight:700;background:var(--softcat);border-left:1px solid #343a4122;min-width:0;overflow:hidden}
+.budget-meter-rest{flex:1;min-width:0;display:flex;justify-content:flex-end;align-items:center;padding-right:5px;color:#6d757f;font-size:11px;white-space:nowrap;font-weight:700;overflow:hidden}
+.budget-tick{position:absolute;top:0;height:100%;width:2px;background:#656a70;transform:translateX(-1px);pointer-events:none;opacity:.5}
+.budget-remaining-line{font-size:10px;color:#7a8590;text-align:right;padding:4px 1px 0;font-variant-numeric:tabular-nums}
+.budget-remaining-line.over{color:#bc3439;font-weight:700}
+.budget-columns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;padding-top:7px;font-size:11px}
+.budget-columns .c{min-width:0}
+.budget-columns .c:nth-child(2){text-align:center}
+.budget-columns .c:nth-child(3){text-align:right}
+.budget-columns .c span{display:block;color:#9aa1a9;font-size:10px;margin-bottom:3px;white-space:normal;line-height:1.3}
+.budget-columns .c strong{display:block;color:#626b74;font-size:11px;font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.budget-columns .c:nth-child(2) strong{color:#a64c58;font-weight:700}
+.budget-mininote{margin:12px 14px;font-size:11px;color:#788692;line-height:1.5}
+.budget-title-line{padding:11px 12px 5px;color:#373e45;font-weight:750;font-size:16px;background:white}
+.budget-colhead{display:grid;grid-template-columns:1fr 1fr 1fr;font-size:11px;color:#89949d;padding:0 12px 5px}
+.budget-colhead span:nth-child(2){text-align:center}
+.budget-colhead span:nth-child(3){text-align:right}
+.budget-section + .budget-section{margin-top:6px}
+@media(min-width:700px) and (orientation:landscape){.budget-category{padding-left:12px;padding-right:12px}.budget-columns .c strong{font-size:12px}}
+@media(max-width:365px){.budget-total{font-size:15px}.budget-columns{font-size:10px}.budget-columns .c strong{font-size:10px}.budget-columns .c span{font-size:9px}}
+@media(max-width:700px), (display-mode:standalone){.device{height:100dvh;width:100vw;max-width:none;max-height:none;}.navbar{padding-top:env(safe-area-inset-top,0px)}.toolbar{padding-bottom:env(safe-area-inset-bottom,0px)}}
+@media (pointer:coarse), (max-width:700px), (display-mode:standalone), ((orientation:landscape) and (max-height:550px)){
+ html,body{width:100%;height:100%;min-height:0;}
+ .device{width:100vw;height:100dvh;max-width:none;max-height:none;min-height:0;border:0;border-radius:0;box-shadow:none;}
+ .status{display:none;}
+ .navbar{padding-top:env(safe-area-inset-top,0px);min-height:calc(49px + env(safe-area-inset-top,0px));}
+ .toolbar{padding-bottom:env(safe-area-inset-bottom,0px);min-height:calc(53px + env(safe-area-inset-bottom,0px));}
+}
+.schedule-item[hidden],.schedule-month[hidden]{display:none!important}
+@media(max-height:490px) and (orientation:landscape){.navbar{min-height:42px}.group h2{padding-top:5px;padding-bottom:5px}.budget-category{padding-top:3px;padding-bottom:4px}.budget-meter{height:20px}.budget-columns{padding-top:3px}.toolbar{min-height:45px}}
+
+
+/* V0.8 — contrôle d'import lisible sur petit écran, sans modifier le budget validé. */
+.audit-table{width:100%;border-collapse:collapse;margin:10px 0 14px;font-size:12px;table-layout:fixed}
+.audit-table th,.audit-table td{padding:9px 5px;border-bottom:1px solid #dfe3e8;text-align:right;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.audit-table th:first-child,.audit-table td:first-child{text-align:left;width:39%}
+.audit-table thead{background:#eef2f7;color:#39536f}.audit-table .audit-total{font-weight:800;background:#f1f5fa}
+.confirm-import{display:flex;align-items:flex-start;gap:9px;font-size:12px;line-height:1.4;padding:10px 5px;color:#34495e}
+.confirm-import input{margin-top:2px;flex:none;width:18px;height:18px;accent-color:#416a9a}
+@media(max-width:380px){.audit-table{font-size:10px}.audit-table th,.audit-table td{padding:7px 3px}}
+
+</style>
+</head>
+<body>
+<div class="device" id="device" role="application" aria-label="iCompta Classic hors connexion">
+ <div class="status"><span>●●● iCompta Classic</span><span>V0.8 · LOCAL ▰</span></div>
+ <header class="navbar" id="header"></header>
+ <main class="content" id="content"></main>
+ <nav class="toolbar" id="toolbar" aria-label="Actions"></nav>
+</div>
+<script>'use strict';
+const KEY = 'icompta-classic-local-v08';
+const LEGACY = ['icompta-classic-local-v07','icompta-classic-local-v06']; // Les anciennes versions sont conservées en lecture seule
+const $ = id => document.getElementById(id);
+const escapeHTML = v => String(v ?? '').replace(/[&<>"']/g, x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[x]));
+const euro = v => new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'}).format(v/100);
+const moneyInput = v => (Math.abs(v || 0)/100).toFixed(2).replace('.',',');
+const cents = (v, zero=false) => {
+  const s=String(v).trim().replace(/[\s€\u00a0\u202f]/g,'').replace(',','.');
+  if(!/^\d+(\.\d{1,2})?$/.test(s)) return null;
+  const [a,b='']=s.split('.');
+  const n=Number(a)*100+Number((b+'00').slice(0,2));
+  return Number.isSafeInteger(n)&&(zero||n>0)?n:null;
+};
+const uid = () => (globalThis.crypto?.randomUUID?.() || ('d'+Math.random().toString(36).slice(2)));
+const dayISO = date => `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+const today = () => dayISO(new Date());
+const daysAgo = n => {let d=new Date();d.setDate(d.getDate()-n);return dayISO(d)};
+const startYear = year => `${year}-01-01`;
+const monthLabel = iso => new Date(iso+'T12:00:00').toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+const dateLabel = iso => new Date(iso+'T12:00:00').toLocaleDateString('fr-FR');
+// Stable calendar-month rollover: January 31 -> February 28 -> March 31.
+function nextRepeat(t) {
+  const date=new Date(t.date+'T12:00:00Z');
+  if(t.recurrence==='monthly') {
+    const month=new Date(Date.UTC(date.getUTCFullYear(),date.getUTCMonth()+1,1,12));
+    const anchor=Number(t.repeatDay)||date.getUTCDate();
+    month.setUTCDate(Math.min(anchor,new Date(Date.UTC(month.getUTCFullYear(),month.getUTCMonth()+1,0)).getUTCDate()));
+    return month.toISOString().slice(0,10);
+  }
+  if(t.recurrence==='fourweeks') {
+    date.setUTCDate(date.getUTCDate()+28);
+    return date.toISOString().slice(0,10);
+  }
+  return null;
+}
+function recurringProjections(year) {
+  const start=`${year}-01-01`,end=`${year+1}-01-01`,result=[];
+  const exists=new Set(data.transactions.map(t=>[t.account,t.date,t.label,t.amount,t.category].join('¦')));
+  for(const original of data.transactions){
+    if(!['monthly','fourweeks'].includes(original.recurrence)||original.status==='cancelled'||original.transferId)continue;
+    let cursor=original;
+    for(let i=0;i<1200;i++) {
+      const next=nextRepeat(cursor);
+      if(!next||next<=cursor.date||next>=end||(original.repeatEnd && next>original.repeatEnd))break;
+      cursor={...cursor,date:next,status:'pending',repeatDay:original.repeatDay||Number(original.date.slice(8,10))};
+      if(next>=start&&!exists.has([cursor.account,next,cursor.label,cursor.amount,cursor.category].join('¦')))result.push({...cursor,id:'forecast:'+original.id+':'+next,virtual:true});
+    }
+  }
+  return result;
+}
+// A newly generated occurrence is independent; only the next instance keeps the repeat flag.
+function createNextOccurrence(id,quiet=false) {
+  const tx=data.transactions.find(t=>t.id===id);
+  if(!tx || !['monthly','fourweeks'].includes(tx.recurrence)||tx.transferId)return false;
+  const next=nextRepeat(tx);
+  if(!next||(tx.repeatEnd&&next>tx.repeatEnd))return false;
+  const rule=tx.recurrence, anchor=tx.repeatDay||Number(tx.date.slice(8,10));
+  const newTx={...tx,id:uid(),date:next,status:'pending',clearedOn:null,
+    recurrence:rule,repeatDay:anchor};
+  tx.recurrence='none';
+  data.transactions.push(newTx);
+  persist();
+  if(!quiet)render();
+  return true;
+}
+function noticeHorizon(t) {
+  const dt=new Date();
+  const notice=t.repeatNotice||(t.recurrence==='fourweeks'?'fourweeks':'month');
+  if(notice==='month'){
+    const month=new Date(dt.getFullYear(),dt.getMonth()+1,1,12);
+    const max=new Date(month.getFullYear(),month.getMonth()+1,0).getDate();
+    month.setDate(Math.min(dt.getDate(),max));
+    return dayISO(month);
+  }
+  dt.setDate(dt.getDate()+(notice==='fourweeks'?28:7));
+  return dayISO(dt);
+}
+function autoAdvanceRecurrences() {
+  for(let i=0;i<300;i++){
+    const due=data.transactions.find(t=>['monthly','fourweeks'].includes(t.recurrence)&&
+      !t.transferId&&t.status!=='cancelled'&&nextRepeat(t)&&
+      nextRepeat(t)<=noticeHorizon(t)&&(!t.repeatEnd||nextRepeat(t)<=t.repeatEnd));
+    if(!due||!createNextOccurrence(due.id,true))break;
+  }
+}
+
+const DEFAULT_COLORS = {
+  'Alimentation':'#63a459','Logement':'#5184ba','Transport':'#e19648',
+  'Salaire':'#459b78','Santé':'#cf6c68','Loisirs':'#a075b9',
+  'Autre':'#8c9ba8','Transfert':'#55799c'
+};
+const safeHex = x => /^#[0-9a-f]{6}$/i.test(String(x))?x.toLowerCase():'#8c9ba8';
+const encodeName = s => encodeURIComponent(s).replace(/'/g,'%27');
+const clone = x => JSON.parse(JSON.stringify(x));
+const activeCategories = () => data.categories.filter(c=>c.active).sort((a,b)=>a.name.localeCompare(b.name,'fr'));
+const category = name => data.categories.find(c=>c.name===name);
+const categoryColor = name => safeHex(category(name)?.color || DEFAULT_COLORS[name] || '#8c9ba8');
+const account = id => data.accounts.find(a=>a.id===id);
+const txFor = id => data.transactions.filter(t=>t.account===id).sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));
+const categoriesOptions = selected => [...new Set([...activeCategories().filter(x=>x.name!=='Transfert').map(x=>x.name),selected])].filter(Boolean).sort((a,b)=>a.localeCompare(b,'fr'))
+  .map(c=>`<option value="${escapeHTML(c)}" ${c===selected?'selected':''}>${escapeHTML(c)}</option>`).join('');
+const moneyBalFor = (source,a) => {
+  let real=a.initial, cleared=a.initial;
+  for(const t of source.transactions.filter(t=>t.account===a.id)) {
+    if(t.status!=='cancelled')real+=t.amount;
+    if(t.status==='cleared')cleared+=t.amount;
+  }
+  return {real,cleared};
+};
+const moneyBal = a => moneyBalFor(data,a);
+const running = accountID => {
+  let n=account(accountID)?.initial || 0;const vals={};
+  for(const t of txFor(accountID).reverse()){
+    if(t.status!=='cancelled') n+=t.amount;
+    vals[t.id]=n;
+  }
+  return vals;
+};
+
+function sample() {
+  const a=uid(),b=uid(),c=uid();
+  return {
+    isRealData:false,verified:true,
+    accounts:[{id:a,name:'Compte courant',initial:225000,icon:'▣',color:'#4168a6'},
+              {id:b,name:'Livret A',initial:450000,icon:'◆',color:'#68965d'},
+              {id:c,name:'Espèces',initial:9500,icon:'▤',color:'#c89143'}],
+    categories:Object.entries(DEFAULT_COLORS).map(([name,color])=>({name,color,active:true})),
+    transactions:[
+      {id:uid(),account:a,label:'Salaire',amount:270000,date:daysAgo(12),category:'Salaire',kind:'Virement',comment:'',status:'cleared'},
+      {id:uid(),account:a,label:'Loyer',amount:-98000,date:daysAgo(9),category:'Logement',kind:'Virement',comment:'',status:'cleared'},
+      {id:uid(),account:a,label:'Courses',amount:-6530,date:daysAgo(4),category:'Alimentation',kind:'Carte bancaire',comment:'',status:'pending'},
+      {id:uid(),account:a,label:'Électricité',amount:-8520,date:daysAgo(2),category:'Logement',kind:'Prélèvement',comment:'',status:'pending'},
+      {id:uid(),account:a,label:'Loyer mensuel',amount:-98000,date:(()=>{let d=new Date();d.setDate(d.getDate()+16);return dayISO(d)})(),category:'Logement',kind:'',comment:'',status:'pending',recurrence:'monthly',repeatNotice:'month'},
+      {id:uid(),account:a,label:'Transport (4 semaines)',amount:-4500,date:(()=>{let d=new Date();d.setDate(d.getDate()+18);return dayISO(d)})(),category:'Transport',kind:'',comment:'',status:'pending',recurrence:'fourweeks',repeatNotice:'fourweeks'},
+      {id:uid(),account:c,label:'Boulangerie',amount:-850,date:daysAgo(3),category:'Alimentation',kind:'Espèces',comment:'',status:'cleared'}
+    ],
+    budget:{id:uid(),period:'year',name:'Budget annuel',accounts:[a],lines:[
+      {id:uid(),category:'Salaire',side:'income',amount:3240000},
+      {id:uid(),category:'Logement',side:'expense',amount:1320000},
+      {id:uid(),category:'Alimentation',side:'expense',amount:420000},
+      {id:uid(),category:'Transport',side:'expense',amount:144000},
+      {id:uid(),category:'Loisirs',side:'expense',amount:120000}
+    ]}
+  };
+}
+function normalize(obj) {
+  if(!obj || !Array.isArray(obj.accounts) || !Array.isArray(obj.transactions)) throw Error('Données malformées');
+  let names=[];
+  if(Array.isArray(obj.categories)) names.push(...obj.categories.map(x=>typeof x==='string'?x:x.name));
+  names.push(...obj.transactions.map(t=>t.category));
+  if(!obj.isRealData)names.push(...Object.keys(DEFAULT_COLORS));
+  const oldBudget=obj.budget || (obj.budgets||[]).find(b=>b.period==='year');
+  if(oldBudget) names.push(...(oldBudget.lines||[]).map(l=>l.category));
+  names=[...new Set(names.filter(Boolean))];
+  const definitions=names.map(name=>{
+    const old=(obj.categories||[]).find(x=>typeof x==='object' && x.name===name);
+    return {name,color:safeHex(old?.color||DEFAULT_COLORS[name]||'#8c9ba8'),active:old?.active!==false};
+  });
+  // Never multiply former monthly budget amounts by 12 or mislabel them as annual.
+  const b=oldBudget?{...oldBudget,id:oldBudget.id||uid(),name:'Budget annuel',period:'year',
+    lines:(oldBudget.lines||[]).map(l=>({...l,id:l.id||uid()}))}:
+    {id:uid(),name:'Budget annuel',period:'year',accounts:obj.accounts.map(a=>a.id),lines:[]};
+  return {accounts:obj.accounts,transactions:obj.transactions.map(t=>({...t,recurrence:t.recurrence||'none',repeatNotice:t.repeatNotice||(t.recurrence==='fourweeks'?'fourweeks':'month')})),categories:definitions,budget:b,isRealData:obj.isRealData===true,verified:obj.verified===true,importedAt:obj.importedAt||null};
+}
+let data,storageWarning=false,migratedFrom=null;
+try{
+  let raw=localStorage.getItem(KEY);
+  if(!raw)for(const oldKey of LEGACY){raw=localStorage.getItem(oldKey);if(raw){migratedFrom=oldKey;break;}}
+  data=raw?normalize(JSON.parse(raw)):sample();
+}catch(e){data=sample();storageWarning=true;}
+// Rotation de trois états locaux. Ne remplace PAS les sauvegardes JSON exportées.
+function readHistory(){
+  try{const v=JSON.parse(localStorage.getItem(KEY+'-history')||'[]');return Array.isArray(v)?v.filter(x=>x&&typeof x.snapshot==='string').slice(0,3):[];}
+  catch(e){return [];}
+}
+function persist(){
+  try{
+    const latest=JSON.stringify(data),previous=localStorage.getItem(KEY);
+    if(previous!==null && previous!==latest && (data.isRealData || JSON.parse(previous).isRealData)){
+      const history=readHistory();
+      if(!history.length||history[0].snapshot!==previous){
+        history.unshift({at:new Date().toISOString(),snapshot:previous});
+        localStorage.setItem(KEY+'-history',JSON.stringify(history.slice(0,3)));
+      }
+    }
+    localStorage.setItem(KEY,latest);
+    if(localStorage.getItem(KEY)!==latest)throw Error('Lecture de contrôle impossible');
+    return true;
+  }catch(e){storageWarning=true;console.warn('Stockage local indisponible',e);return false;}
+}
+if (!data.isRealData || data.verified === true) autoAdvanceRecurrences();
+let screen='home',accountId=null,editMode=false,filter='all',draft=null,editingId=null,sign='debit',budgetYear=new Date().getFullYear();
+let categoryOriginal=null,transferId=null,stagedImport=null;
+function btn(label,icon,action){return `<button onclick="${action}" title="${escapeHTML(label)}"><b>${icon}</b><small>${escapeHTML(label)}</small></button>`}
+function nbtn(label,action){return `<button class="navbtn" onclick="${action}">${escapeHTML(label)}</button>`}
+function header(label,left='',right=''){$('header').innerHTML=`<div>${left}</div><h1>${escapeHTML(label)}</h1><div class="navright">${right}</div>`}
+function section(label,html){return `<section class="group"><h2>${escapeHTML(label)}</h2><div class="panel">${html}</div></section>`}
+function frow(label,content){return `<div class="field"><label>${escapeHTML(label)}</label>${content}</div>`}
+function show(page){screen=page;render();$('content').scrollTop=0;}
+
+function mainBar(){
+  $('toolbar').innerHTML=btn('Accueil','⌂',"show('home')")+btn('Échéancier','▦',"show('schedule')")+btn('Budget','⚖',"show('budget')")+btn('Catégories','◈',"show('categories')")+btn('Données','⇧',"show('info')");
+}
+function home(){
+ header('iCompta',nbtn('Sauvegarder','exportBackup()'),nbtn(editMode?'Terminé':'Modifier','editMode=!editMode;render()'));
+ const accounts=data.accounts.map(a=>{
+  const b=moneyBal(a);
+  return `<button class="listrow" onclick="${editMode?`startAccount('${a.id}')`:`openAccount('${a.id}')`}">
+   <span class="accounticon">💶</span><span class="rowmain"><strong>${escapeHTML(a.name)}</strong>
+   <span class="rowsub">${euro(b.real)} [ Pointé : ${euro(b.cleared)} ]</span></span><span class="chevron">›</span></button>`;
+ }).join('');
+ const add=editMode?'<button class="listrow" onclick="startAccount(null)"><span class="accounticon">＋</span><span class="rowmain"><strong>Ajouter un compte</strong></span></button>':'';
+ const all={real:0,cleared:0};for(const a of data.accounts){const b=moneyBal(a);all.real+=b.real;all.cleared+=b.cleared;}
+ const totals=`<div class="home-total">Total : ${euro(all.real)} [ Pointé : ${euro(all.cleared)} ]</div>`;
+ const annualLines=budgetData(budgetYear).filter(l=>l.side==='expense');
+ const remaining=annualLines.reduce((s,l)=>s+l.amount-l.forecast,0);
+ const budget=`<button class="listrow" onclick="show('budget')"><span class="accounticon">⚖️</span>
+    <span class="rowmain"><strong>${budgetYear}</strong><span class="rowsub">${euro(remaining)} restant jusqu'au 31/12/${budgetYear}</span></span><span class="chevron">›</span></button>`;
+ const scheduled=`<button class="listrow" onclick="show('schedule')"><span class="accounticon">🗓️</span>
+    <span class="rowmain"><strong>Échéancier</strong><span class="rowsub">Opérations à venir et récurrences</span></span><span class="chevron">›</span></button>`;
+ const others=`<button class="listrow" onclick="show('categories')"><span class="accounticon">💶</span><span class="rowmain"><strong>Monnaie (€) &amp; Catégories</strong></span><span class="chevron">›</span></button>
+    <button class="listrow" onclick="show('info')"><span class="accounticon">▤</span><span class="rowmain"><strong>Sauvegarde et import</strong></span><span class="chevron">›</span></button>`;
+ $('content').innerHTML=`<div class="notice">${data.isRealData?'COMPTABILITÉ IMPORTÉE · SAUVEGARDE RECOMMANDÉE':'DÉMONSTRATION — DONNÉES FICTIVES'}</div>${section('Comptes',accounts+add+totals+scheduled)}${section('Budgets',budget)}${section('Autre',others)}`;
+ mainBar();
+}
+
+function openAccount(id){accountId=id;editMode=false;filter='all';show('transactions')}
+
+function transactions(){
+ const a=account(accountId);if(!a){show('home');return}
+ const bal=moneyBal(a),r=running(accountId),txs=txFor(accountId),current=txs.filter(x=>filter==='all'||x.status===filter);
+ header(a.name,nbtn('‹ iCompta',"show('home')"),nbtn(editMode?'Terminé':'Modifier','editMode=!editMode;render()'));
+ let html=`<div class="schedule-summary">${txs.length} opérations — Solde : ${euro(bal.real)}</div>`;
+ html+=`<div class="subbar"><span>Afficher</span><select id="filter" onchange="filter=this.value;render()"><option value="all">Toutes</option><option value="pending">Non pointées</option><option value="cleared">Pointées</option><option value="cancelled">Annulées</option></select></div>`;
+ let before='';
+ for(const t of current){
+  const month=t.date.slice(0,7);if(month!==before){html+=`<div class="month">${escapeHTML(monthLabel(t.date))}</div>`;before=month}
+  const color=categoryColor(t.category),rec=t.recurrence==='monthly'?' (Mensuelle)':t.recurrence==='fourweeks'?' (Toutes les 4 semaines)':'';
+  html+=`<div class="txrow ${t.status==='cancelled'?'cancelled':''}"><span class="txaccent" style="background:${color}"></span>
+    <button class="txinfo" onclick="startTransaction('${t.id}')" aria-label="Modifier ${escapeHTML(t.label)}"><span class="txtext">
+     <span class="txlabel">${t.transferId?'⇄ ':''}${escapeHTML(t.label)}</span>
+     <span class="txmeta">${t.status==='cleared'?'●':t.status==='pending'?'◌':'×'} ${escapeHTML(dateLabel(t.date))}${escapeHTML(rec)}</span>
+    </span><span class="txmoney"><span class="txbalance">${euro(r[t.id])}</span><span class="txamount ${t.amount>=0?'credit':''}">${euro(t.amount)}</span><span class="schedule-account">${escapeHTML(t.category)}</span></span><span class="txarrow">›</span></button>
+    <button class="txstatus ${t.status==='cleared'?'done':''}" onclick="${editMode?`removeTransaction('${t.id}')`:`togglePoint('${t.id}')`}" ${t.status==='cancelled'&&!editMode?'disabled':''} aria-label="${editMode?'Supprimer':t.status==='cleared'?'Dépointer':'Pointer'} ${escapeHTML(t.label)}">${editMode?'✕':t.status==='cleared'?'✓':'○'}</button></div>`;
+ }
+ if(!current.length)html+='<div class="empty">Aucune opération pour ce filtre.</div>';
+ $('content').innerHTML=html;$('filter').value=filter;
+ $('toolbar').innerHTML=btn('Ajouter','＋','startTransaction(null)')+btn('Modifier','✎','editMode=!editMode;render()')+btn('Échéancier','▦',"show('schedule')")+btn('Accueil','⌂',"show('home')");
+}
+
+function togglePoint(id){const t=data.transactions.find(x=>x.id===id);if(!t||t.status==='cancelled')return;t.status=t.status==='cleared'?'pending':'cleared';persist();render()}
+function removeTransaction(id){const t=data.transactions.find(x=>x.id===id);if(!t)return;const msg=t.transferId?'Supprimer les deux opérations liées à ce virement ?':'Supprimer cette opération ?';if(!confirm(msg))return;data.transactions=data.transactions.filter(x=>t.transferId?x.transferId!==t.transferId:x.id!==id);persist();render()}
+function startTransaction(id){const t=data.transactions.find(x=>x.id===id);if(t?.transferId){startTransfer(t.transferId);return}editingId=id;draft=t?clone(t):{id:uid(),account:accountId,label:'',amount:0,date:today(),category:'Alimentation',kind:'',comment:'',status:'pending',recurrence:'none',repeatEnd:''};sign=draft.amount>0?'credit':'debit';show('txEditor')}
+function transactionEditor(){
+  header(editingId?'Modifier':'Ajouter',nbtn('Annuler',"show('transactions')"),nbtn('Enregistrer','saveTransaction()'));
+  $('content').innerHTML=`<div class="fields">
+    <div class="fieldpanel">${frow('Nom',`<input id="tLabel" value="${escapeHTML(draft.label)}" oninput="matchPrevious()" placeholder="Libellé">`)}<div id="match"></div></div>
+    <div class="fieldpanel">${frow('Montant',`<input id="tAmount" inputmode="decimal" value="${moneyInput(draft.amount)}" aria-label="Montant"><span>€</span>`)}<div class="switches"><button id="debit" onclick="setSign('debit')">Débit −</button><button id="credit" onclick="setSign('credit')">Crédit +</button></div></div>
+    <div class="fieldpanel">${frow('Date',`<input type="date" id="tDate" value="${escapeHTML(draft.date)}">`)}${frow('Statut',`<select id="tStatus"><option value="pending">En attente</option><option value="cleared">Pointée</option><option value="cancelled">Annulée</option></select>`)}${frow('Catégorie',`<span class="swatch" id="tCategoryColor"></span><select id="tCategory" onchange="updateCategoryPreview()">${categoriesOptions(draft.category)}</select>`)}</div>
+    <div class="fieldpanel">${frow('Fréquence',`<select id="tRepeat" onchange="updateRepeatEnd()"><option value="none">Aucune</option><option value="monthly">Tous les mois</option><option value="fourweeks">Toutes les 4 semaines</option></select>`)}</div>
+    <div id="repeatEndArea" class="fieldpanel" style="display:none">${frow('Créer avant',`<select id="tRepeatNotice"><option value="month">Un mois avant</option><option value="week">Une semaine avant</option><option value="fourweeks">Quatre semaines avant</option></select>`)}${frow('Fin (facultatif)',`<input type="date" id="tRepeatEnd" value="${escapeHTML(draft.repeatEnd||'')}">`)}</div>
+    ${editingId&&Array.isArray(draft.allocations)&&draft.allocations.length?'<p class="smallnote warning">Cette opération est ventilée sur plusieurs catégories. Son détail est conservé tant que la catégorie principale ne change pas.</p>':''}
+    ${editingId&&['monthly','fourweeks'].includes(draft.recurrence)?'<button class="softbtn wide" onclick="createNextOccurrenceFromEditor()">↻ Créer l’échéance suivante</button>':''}
+    <div class="error" id="error"></div>${editingId?'<button class="danger" onclick="removeFromEditor()">Supprimer cette opération</button>':''}</div>`;
+  $('tStatus').value=draft.status;$('tRepeat').value=draft.recurrence||'none';$('tRepeatNotice').value=draft.repeatNotice||(draft.recurrence==='fourweeks'?'fourweeks':'month');setSign(sign);updateRepeatEnd();updateCategoryPreview();matchPrevious();
+  $('toolbar').innerHTML=btn('Retour','‹',"show('transactions')")+btn('Enregistrer','✓','saveTransaction()');
+}
+function updateRepeatEnd(){const a=$('repeatEndArea');if(a)a.style.display=$('tRepeat')?.value==='none'?'none':'block'}
+function createNextOccurrenceFromEditor(){
+  if(confirm('Créer la prochaine échéance en conservant les données actuellement enregistrées ? (Les modifications non enregistrées seront ignorées.)')){
+    if(createNextOccurrence(editingId,true))show('transactions');else alert('Impossible de créer une nouvelle échéance (date de fin dépassée, par exemple).');
+  }
+}
+function updateCategoryPreview(){const el=$('tCategoryColor');if(el)el.style.background=categoryColor($('tCategory')?.value)}
+function setSign(value){sign=value;for(const x of ['debit','credit'])$(x).classList.toggle('active',x===value)}
+function matchPrevious(){const name=$('tLabel').value.trim().toLocaleLowerCase('fr');const t=!editingId?data.transactions.filter(t=>!t.transferId&&t.label.toLocaleLowerCase('fr')===name).sort((a,b)=>b.date.localeCompare(a.date))[0]:null;$('match').innerHTML=t?`<div class="hint"><button onclick="copyPrevious('${t.id}')">↺ Reprendre les informations de « ${escapeHTML(t.label)} »</button></div>`:''}
+function copyPrevious(id){const t=data.transactions.find(t=>t.id===id);if(!t)return;$('tAmount').value=moneyInput(t.amount);setSign(t.amount>=0?'credit':'debit');$('tCategory').value=t.category;updateCategoryPreview()}
+function saveTransaction(){const value=cents($('tAmount').value),name=$('tLabel').value.trim(),date=$('tDate').value;if(!name||value===null||!/^\d{4}-\d\d-\d\d$/.test(date)){$('error').textContent='Vérifie le libellé, le montant et la date.';return}const recurrence=$('tRepeat').value,repeatEnd=recurrence==='none'?'':$('tRepeatEnd').value;
+  if(repeatEnd&&repeatEnd<date){$('error').textContent='La date de fin doit suivre la date de l’opération.';return}
+  if (editingId && draft.category !== $('tCategory').value && Array.isArray(draft.allocations) && draft.allocations.length && !confirm('Changer la catégorie principale supprimera sa répartition historique entre catégories. Continuer ?')) return;
+  const updated={...draft,label:name,amount:(sign==='debit'?-value:value),date,category:$('tCategory').value,allocations:(draft.category===$('tCategory').value?draft.allocations:null),status:$('tStatus').value,
+    recurrence,repeatEnd,repeatDay:recurrence==='monthly'?(draft.repeatDay||Number(date.slice(8,10))):null,repeatNotice:$('tRepeatNotice').value};const i=data.transactions.findIndex(t=>t.id===updated.id);if(i===-1)data.transactions.push(updated);else data.transactions[i]=updated;persist();autoAdvanceRecurrences();show('transactions')}
+function removeFromEditor(){if(editingId&&confirm('Supprimer définitivement cette opération ?')){data.transactions=data.transactions.filter(t=>t.id!==editingId);persist();show('transactions')}}
+function startAccount(id){editingId=id;draft=id?clone(account(id)):{id:uid(),name:'',initial:0,color:'#4168a6',icon:'▣'};sign=draft.initial<0?'debit':'credit';show('accountEditor')}
+function accountEditor(){
+  header(editingId?'Modifier compte':'Nouveau compte',nbtn('Annuler',"show('home')"),nbtn('Enregistrer','saveAccount()'));
+  $('content').innerHTML=`<div class="fields"><div class="fieldpanel">${frow('Nom',`<input id="aName" value="${escapeHTML(draft.name)}">`)}${frow('Solde initial',`<input id="aAmount" inputmode="decimal" value="${moneyInput(draft.initial)}"><span>€</span>`)}<div class="switches"><button id="debit" onclick="setSign('debit')">Négatif −</button><button id="credit" onclick="setSign('credit')">Positif +</button></div></div><div class="fieldpanel">${frow('Icône',`<select id="aIcon"><option>▣</option><option>◆</option><option>▤</option><option>▦</option></select>`)}${frow('Couleur',`<input type="color" id="aColor" value="${safeHex(draft.color)}">`)}</div><div id="error" class="error"></div>${editingId?'<button class="danger" onclick="removeAccount()">Supprimer ce compte et ses opérations</button>':''}</div>`;
+  $('aIcon').value=draft.icon;setSign(sign);$('toolbar').innerHTML=btn('Retour','‹',"show('home')")+btn('Enregistrer','✓','saveAccount()');
+}
+function saveAccount(){const value=cents($('aAmount').value,true),name=$('aName').value.trim();if(!name||value===null){$('error').textContent='Vérifie le nom et le solde initial.';return}const updated={...draft,name,initial:sign==='debit'?-value:value,color:safeHex($('aColor').value),icon:$('aIcon').value};const i=data.accounts.findIndex(a=>a.id===updated.id);if(i===-1)data.accounts.push(updated);else data.accounts[i]=updated;persist();editMode=false;show('home')}
+function removeAccount(){if(!editingId||!confirm('Supprimer ce compte ET toutes ses opérations ? Une sauvegarde exportée est fortement conseillée avant de continuer.'))return;const linked=new Set(data.transactions.filter(t=>t.account===editingId&&t.transferId).map(t=>t.transferId));data.transactions=data.transactions.filter(t=>t.account!==editingId&&!linked.has(t.transferId));data.accounts=data.accounts.filter(a=>a.id!==editingId);data.budget.accounts=data.budget.accounts.filter(a=>a!==editingId);persist();show('home')}
+function categoriesScreen(){
+  header('Catégories',nbtn('‹ iCompta',"show('home')"),nbtn('+ Ajouter','startCategory(null)'));
+  const active=activeCategories().map(c=>{
+    const system=c.name==='Transfert'||c.name==='Autre';
+    return `<div class="listrow"><span class="swatch big" style="background:${safeHex(c.color)}"></span><span class="rowmain"><strong>${escapeHTML(c.name)}</strong></span><button class="softbtn" onclick="startCategory('${encodeName(c.name)}')">Modifier</button>${system?'':`<button class="softbtn danger-inline" title="Retirer ${escapeHTML(c.name)}" onclick="archiveCategory('${encodeName(c.name)}')">Retirer</button>`}</div>`;
+  }).join('');
+  const archived=data.categories.filter(c=>!c.active).map(c=>`<div class="listrow"><span class="swatch big" style="background:${safeHex(c.color)}"></span><span class="rowmain"><strong>${escapeHTML(c.name)}</strong></span><button class="softbtn" onclick="restoreCategory('${encodeName(c.name)}')">Rétablir</button></div>`).join('');
+  $('content').innerHTML=`<div class="notice">MONNAIE UNIQUE : EURO (€)</div>${section('Catégories disponibles',active)}${archived?section('Catégories retirées',archived):''}<p class="smallnote">Retirer une catégorie la masque pour les nouvelles opérations. Son nom et sa couleur restent dans les anciennes écritures et le budget.</p>`;
+  $('toolbar').innerHTML=btn('Ajouter','＋','startCategory(null)')+btn('Budget','▤',"show('budget')")+btn('Accueil','⌂',"show('home')");
+}
+function startCategory(encoded){categoryOriginal=encoded?decodeURIComponent(encoded):null;const c=categoryOriginal?category(categoryOriginal):null;draft={name:c?.name||'',color:c?.color||'#629ebd'};show('categoryEditor')}
+function categoryEditor(){header(categoryOriginal?'Modifier catégorie':'Nouvelle catégorie',nbtn('Annuler',"show('categories')"),nbtn('Enregistrer','saveCategory()'));
+  const fixed=['Transfert','Autre'].includes(categoryOriginal);
+  $('content').innerHTML=`<div class="fields"><div class="fieldpanel">${frow('Nom',`<input id="cName" value="${escapeHTML(draft.name)}" maxlength="45" ${fixed?'readonly':''} placeholder="Nom de catégorie">`)}${frow('Couleur',`<input type="color" id="cColor" value="${safeHex(draft.color)}" oninput="updateColorSwatch()"><span class="swatch big" id="colorSample" style="background:${safeHex(draft.color)}"></span>`)}</div><p class="smallnote">Cette couleur apparaîtra dans le budget, la liste des opérations et la sélection d'une catégorie.</p><div class="error" id="error"></div></div>`;
+  $('toolbar').innerHTML=btn('Retour','‹',"show('categories')")+btn('Enregistrer','✓','saveCategory()');
+}
+function updateColorSwatch(){if($('colorSample'))$('colorSample').style.background=$('cColor').value}
+function saveCategory(){const name=$('cName').value.trim(),col=safeHex($('cColor').value);if(!name){$('error').textContent='Saisis un nom de catégorie.';return}const dup=data.categories.find(c=>c.name.toLocaleLowerCase('fr')===name.toLocaleLowerCase('fr')&&c.name!==categoryOriginal);if(dup){$('error').textContent='Cette catégorie existe déjà.';return}
+  if(categoryOriginal){const c=category(categoryOriginal);if(!c)return;if(['Autre','Transfert'].includes(categoryOriginal)&&name!==categoryOriginal){$('error').textContent='Impossible de renommer une catégorie système.';return}c.name=name;c.color=col;c.active=true;if(name!==categoryOriginal){for(const t of data.transactions){if(t.category===categoryOriginal)t.category=name;if(Array.isArray(t.allocations))for(const a of t.allocations)if(a.category===categoryOriginal)a.category=name;}for(const l of data.budget.lines)if(l.category===categoryOriginal)l.category=name;}}
+  else data.categories.push({name,color:col,active:true});
+  persist();show('categories');
+}
+function archiveCategory(encoded){const name=decodeURIComponent(encoded);if(['Transfert','Autre'].includes(name))return;if(!confirm(`Retirer « ${name} » des choix futurs ? Ses anciennes opérations restent intactes.`))return;const c=category(name);if(c)c.active=false;persist();render()}
+function restoreCategory(encoded){const c=category(decodeURIComponent(encoded));if(c)c.active=true;persist();render()}
+function startTransfer(link){transferId=link;const pair=link?data.transactions.filter(t=>t.transferId===link):[],out=pair.find(t=>t.amount<0),inc=pair.find(t=>t.amount>0);draft={from:out?.account||accountId||data.accounts[0]?.id,to:inc?.account||data.accounts.find(a=>a.id!==(out?.account||accountId))?.id,amount:Math.abs(out?.amount||0),date:out?.date||today(),comment:out?.comment||'Virement interne'};show('transfer')}
+function transferEditor(){header(transferId?'Modifier virement':'Virement',nbtn('Annuler',accountId?"show('transactions')":"show('home')"),nbtn('Enregistrer','saveTransfer()'));
+  const opts=data.accounts.map(a=>`<option value="${a.id}">${escapeHTML(a.name)}</option>`).join('');
+  $('content').innerHTML=`<div class="fields"><div class="fieldpanel">${frow('De',`<select id="from">${opts}</select>`)}${frow('Vers',`<select id="to">${opts}</select>`)}${frow('Montant',`<input id="transferAmount" inputmode="decimal" value="${moneyInput(draft.amount)}"><span>€</span>`)}${frow('Date',`<input type="date" id="transferDate" value="${escapeHTML(draft.date)}">`)}</div><p class="smallnote">Chaque virement génère une dépense et un crédit liés. Les deux écritures sont exclues du budget annuel.</p><div class="error" id="error"></div>${transferId?'<button class="danger" onclick="removeTransfer()">Supprimer les deux opérations</button>':''}</div>`;
+  $('from').value=draft.from||'';$('to').value=draft.to||'';$('toolbar').innerHTML=btn('Retour','‹',accountId?"show('transactions')":"show('home')")+btn('Enregistrer','✓','saveTransfer()');
+}
+function saveTransfer(){const from=$('from').value,to=$('to').value,value=cents($('transferAmount').value),date=$('transferDate').value;if(!from||!to||from===to||value===null||!/^\d{4}-\d\d-\d\d$/.test(date)){$('error').textContent='Choisis deux comptes différents, un montant et une date.';return}const link=transferId||uid(),pair=data.transactions.filter(t=>t.transferId===link),out=pair.find(t=>t.amount<0),inc=pair.find(t=>t.amount>0);const note=draft.comment||'';data.transactions=data.transactions.filter(t=>t.transferId!==link);data.transactions.push({id:out?.id||uid(),account:from,transferId:link,label:`Vers ${account(to).name}`,amount:-value,date,category:'Transfert',kind:'Virement',comment:note,status:out?.status||'pending'},{id:inc?.id||uid(),account:to,transferId:link,label:`Depuis ${account(from).name}`,amount:value,date,category:'Transfert',kind:'Virement',comment:note,status:inc?.status||'pending'});persist();show(accountId?'transactions':'home')}
+function removeTransfer(){if(transferId&&confirm('Supprimer les deux opérations du virement ?')){data.transactions=data.transactions.filter(t=>t.transferId!==transferId);persist();show(accountId?'transactions':'home')}}
+
+let scheduleMonths=12,scheduleSearch='';
+function scheduleScreen(){
+ header('Échéancier',nbtn('‹ iCompta',"show('home')"),'');
+ const now=today(),stop=new Date(now+'T12:00:00');stop.setMonth(stop.getMonth()+scheduleMonths);
+ const end=dayISO(stop),startYearNum=Number(now.slice(0,4)),endYearNum=Number(end.slice(0,4));
+ let proposals=[];
+ for(let y=startYearNum;y<=endYearNum;y++)proposals.push(...recurringProjections(y));
+ const booked=data.transactions.filter(t=>t.status==='pending'&&t.date>=now&&t.date<=end);
+ const items=[...booked,...proposals.filter(t=>t.date>=now&&t.date<=end)]
+   .sort((a,b)=>a.date.localeCompare(b.date)||String(a.label).localeCompare(String(b.label),'fr'));
+ const balance=data.accounts.reduce((s,a)=>s+moneyBal(a).real,0)+proposals.filter(t=>t.date>=now&&t.date<=end).reduce((s,t)=>s+t.amount,0);
+ let before='',rows='';
+ for(const t of items){
+  const month=t.date.slice(0,7),color=categoryColor(t.category);
+  if(month!==before){before=month;rows+=`<div class="month schedule-month">${escapeHTML(monthLabel(t.date))}</div>`}
+  const recur=t.recurrence==='monthly'?'Mensuelle':t.recurrence==='fourweeks'?'Toutes les 4 semaines':'';
+  rows+=`<div class="txrow schedule-item" data-search="${escapeHTML((t.label+' '+(account(t.account)?.name||'')+' '+t.category).toLocaleLowerCase('fr'))}"><span class="txaccent" style="background:${color}"></span>
+    <button class="txinfo" onclick="${t.virtual?`alert('Échéance prévisionnelle non encore enregistrée ; elle ne sera créée que selon les règles de récurrence.')`:`accountId='${t.account}';startTransaction('${t.id}')`}"><span class="txtext"><span class="txlabel">${escapeHTML(t.label)}</span>
+       <span class="txmeta">${escapeHTML(dateLabel(t.date))}${recur?' · '+escapeHTML(recur):''}${t.virtual?' · Prévue':''}</span></span>
+       <span class="txmoney"><span class="schedule-account">▣ ${escapeHTML(account(t.account)?.name||'Compte')}</span>
+       <span class="txamount ${t.amount>=0?'credit':''}">${euro(t.amount)}</span>
+       <span class="schedule-account">${escapeHTML(t.category)}</span></span><span class="txarrow">›</span></button></div>`;
+ }
+ const search=`<input class="schedule-search" id="scheduleSearch" type="search" placeholder="⌕  Recherche" value="${escapeHTML(scheduleSearch)}" aria-label="Rechercher une échéance" oninput="scheduleSearch=this.value;filterSchedule()">`;
+ $('content').innerHTML=`<div class="schedule-summary">${items.length} opérations — Solde estimé : ${euro(balance)}</div>
+  ${search}<div class="subbar"><span>Horizon de l'échéancier</span><select onchange="scheduleMonths=Number(this.value);render()">
+  <option value="6" ${scheduleMonths===6?'selected':''}>6 mois</option><option value="12" ${scheduleMonths===12?'selected':''}>12 mois</option><option value="24" ${scheduleMonths===24?'selected':''}>24 mois</option></select></div>
+  ${rows||'<div class="empty">Aucune échéance pour cet intervalle.</div>'}
+  <p class="schedule-note">Prévision du ${dateLabel(now)} au ${dateLabel(end)}. Les échéances virtuelles ne sont pas enregistrées comme transactions ; elles ne sont comptées qu'une seule fois.</p>`;
+ filterSchedule();
+ $('toolbar').innerHTML=btn('Accueil','⌂',"show('home')")+btn('Budget','⚖',"show('budget')")+btn('Comptes','▣',"show('home')");
+}
+function filterSchedule(){
+ const q=scheduleSearch.trim().toLocaleLowerCase('fr');let n=0;
+ for(const row of document.querySelectorAll('.schedule-item')){const show=!q||row.dataset.search.includes(q);row.hidden=!show;if(show)n++}
+ let any=false;for(const el of [...document.querySelectorAll('.schedule-month')].reverse()){
+  let next=el.nextElementSibling,visible=false;
+  while(next&&!next.classList.contains('schedule-month')){if(next.classList.contains('schedule-item')&&!next.hidden)visible=true;next=next.nextElementSibling}
+  el.hidden=!visible;any ||= visible;
+ }
+}
+
+function budgetData(year=budgetYear){
+  const start=`${year}-01-01`,end=`${year+1}-01-01`;
+  const included=[...data.transactions,...recurringProjections(year)].filter(t=>
+    data.budget.accounts.includes(t.account)&&t.status!=='cancelled'&&!t.transferId&&t.date>=start&&t.date<end);
+  const allocationValue=(l,t)=>{
+    if(l.side==='expense' ? t.amount>=0 : t.amount<=0) return 0;
+    // Preserve exact allocation ratios from iCompta 2, including partial and negative ratios.
+    if(Array.isArray(t.allocations)&&t.allocations.length)
+      return t.allocations.filter(a=>a.category===l.category).reduce((n,a)=>n+Math.round(Math.abs(t.amount)*a.ratio),0);
+    return t.category===l.category?Math.abs(t.amount):0;
+  };
+  return data.budget.lines.map(l=>({...l,
+    cleared:included.filter(t=>t.status==='cleared').reduce((s,t)=>s+allocationValue(l,t),0),
+    forecast:included.reduce((s,t)=>s+allocationValue(l,t),0)
+  }));
+}
+
+function mixWhite(hex,weight=.62){
+ const rgb=String(hex).replace('#','').match(/../g).map(x=>parseInt(x,16));
+ return '#'+rgb.map(x=>Math.round(x+(255-x)*weight).toString(16).padStart(2,'0')).join('');
+}
+function budgetScreen(){
+ header(String(budgetYear),nbtn('‹ iCompta',"show('home')"),nbtn('Modifier','startBudgetEditor()'));
+ const lines=budgetData(budgetYear),expenses=lines.filter(l=>l.side==='expense'),incomes=lines.filter(l=>l.side==='income');
+ const total=(ll,field)=>ll.reduce((s,l)=>s+Number(l[field]||0),0);
+ const card=l=>{
+  const color=categoryColor(l.category),real=Math.max(0,l.cleared),unpointed=Math.max(0,l.forecast-l.cleared),planned=Math.max(0,l.amount);
+  const realP=planned?100*real/planned:real?100:0,pendingP=planned?100*unpointed/planned:unpointed?100:0;
+  const realW=Math.min(100,realP),pendingW=Math.min(100-realW,pendingP),remainder=planned-l.forecast;
+  const restW=Math.max(0,100-realW-pendingW),totalP=realP+pendingP;
+  const leftOver=totalP>100.0001;
+  const isIncome=l.side==='income',base=isIncome?'Revenus':'Dépenses';
+  const p1=realW>=12?`${Math.round(realP)} %`:'',p2=pendingW>=10?`${Math.round(pendingP)} %`:'';
+  return `<div class="budget-category" aria-label="Catégorie ${escapeHTML(l.category)}">
+    <div class="budget-catname">${escapeHTML(l.category)}</div>
+    <div class="budget-meter" role="img" aria-label="${Math.round(realP)} pour cent pointés, ${Math.round(pendingP)} pour cent prévus sur le budget">
+       <div class="budget-meter-real" style="width:${realW.toFixed(3)}%;--cat:${color}">${p1}</div>
+       <div class="budget-meter-future" style="width:${pendingW.toFixed(3)}%;--softcat:${mixWhite(color,.56)}">${p2}</div>
+       <div class="budget-meter-rest">${!leftOver && restW>=24?euro(remainder):''}</div>
+       <div class="budget-tick" style="left:${Math.min(100,realW+pendingW).toFixed(3)}%"></div>
+    </div>
+    <div class="budget-remaining-line ${leftOver?'over':''}">${leftOver?'Dépassement : '+euro(-remainder):'Reste : '+euro(remainder)}</div>
+    <div class="budget-columns"><div class="c"><span>${base}</span><strong>${euro(real)}</strong></div>
+      <div class="c"><span>${isIncome?'Revenus prévus':'Dépenses prévues'}</span><strong>${euro(unpointed)}</strong></div>
+      <div class="c"><span>${isIncome?'Revenus budgétés':'Dépenses budgétées'}</span><strong>${euro(planned)}</strong></div></div>
+   </div>`;
+ };
+ const sectionHtml=(side,rows)=>{
+  const rev=side==='income',label=rev?'Revenus':'Dépenses',pointed=total(rows,'cleared'),pred=total(rows,'forecast'),budget=total(rows,'amount');
+  return `<section class="budget-section"><div class="budget-overview"><div class="budget-total">${label} : ${euro(pred)} / ${euro(budget)}</div>
+    <div class="budget-caption">${euro(pointed)} pointés · ${euro(pred-pointed)} prévus · ${euro(budget-pred)} restant</div></div>
+    ${rows.length?rows.map(card).join(''):'<div class="empty">Aucune catégorie '+(rev?'de revenu':'de dépense')+' définie.</div>'}</section>`;
+ };
+ $('content').innerHTML=`<div class="annual-budget">
+   <div class="pickerrow"><button aria-label="Année précédente" onclick="budgetYear--;render()">‹</button><strong>${budgetYear}</strong><button aria-label="Année suivante" onclick="budgetYear++;render()">›</button></div>
+   ${sectionHtml('income',incomes)}${sectionHtml('expense',expenses)}
+   <p class="budget-mininote">Dans cette reproduction : « Dépenses / Revenus » = opérations pointées ; « prévus » = opérations en attente et échéances futures non encore enregistrées ; « budgétés » = plafond annuel. Les virements internes sont exclus du budget.</p>
+   </div>`;
+ $('toolbar').innerHTML=btn('Accueil','⌂',"show('home')")+btn('Échéancier','▦',"show('schedule')")+btn('Catégories','◈',"show('categories')")+btn('Modifier','✎','startBudgetEditor()');
+}
+
+function startBudgetEditor(){draft=clone(data.budget);show('budgetEditor')}
+function collectBudgetDraft(){
+  if(!$('budgetAccounts'))return;
+  draft.accounts=[...$('budgetAccounts').querySelectorAll('input:checked')].map(el=>el.value);
+  draft.lines=[...$('budgetLines').querySelectorAll('.budget-line')].map(row=>({
+    id:row.dataset.id,category:row.querySelector('.linecat').value,side:row.querySelector('.lineside').value,amount:cents(row.querySelector('.lineamount').value,true)
+  }));
+}
+function budgetEditor(){
+  header('Modifier budget',nbtn('Annuler',"show('budget')"),nbtn('Enregistrer','saveBudget()'));
+  const accounts=data.accounts.map(a=>`<label><input type="checkbox" value="${a.id}" ${draft.accounts.includes(a.id)?'checked':''}> ${escapeHTML(a.name)}</label>`).join('');
+  const lines=draft.lines.map((l,i)=>`<div class="budget-line" data-id="${l.id||uid()}"><span class="swatch" style="background:${categoryColor(l.category)}"></span><select class="linecat" onchange="this.previousElementSibling.style.background=categoryColor(this.value)">${categoriesOptions(l.category)}</select><select class="lineside"><option value="expense" ${l.side==='expense'?'selected':''}>Débit −</option><option value="income" ${l.side==='income'?'selected':''}>Crédit +</option></select><input class="lineamount" inputmode="decimal" aria-label="Montant annuel" value="${moneyInput(l.amount)}"><button class="removeLine" title="Retirer cette ligne" onclick="removeBudgetLine(${i})">✕</button></div>`).join('');
+  $('content').innerHTML=`<div class="notice">UN SEUL BUDGET ANNUEL · EURO (€)</div><div class="fields">${section('Comptes inclus',`<div class="accountchecks" id="budgetAccounts">${accounts}</div>`)}${section('Montants annuels par catégorie',`<div id="budgetLines">${lines}</div><div class="inline-actions"><button class="softbtn" onclick="addBudgetLine()">＋ Ajouter une catégorie</button></div>`)}<p class="smallnote">Chaque catégorie utilise sa propre couleur, définie dans le menu Catégories.</p><div id="error" class="error"></div></div>`;
+  $('toolbar').innerHTML=btn('Retour','‹',"show('budget')")+btn('Enregistrer','✓','saveBudget()');
+}
+function addBudgetLine(){collectBudgetDraft();const next=activeCategories().find(c=>c.name!=='Transfert'&&!draft.lines.some(l=>l.category===c.name&&l.side==='expense'));draft.lines.push({id:uid(),category:next?.name||'Autre',side:'expense',amount:0});render()}
+function removeBudgetLine(i){collectBudgetDraft();draft.lines.splice(i,1);render()}
+function saveBudget(){collectBudgetDraft();const error=$('error');const pairs=draft.lines.map(l=>l.category+'|'+l.side);if(!draft.accounts.length||draft.lines.some(l=>l.amount===null)||new Set(pairs).size!==pairs.length){error.textContent='Sélectionne un compte, vérifie les montants et évite les doublons.';return}data.budget={...draft,name:'Budget annuel',period:'year'};persist();show('budget')}
+// --- Local import, export and recovery. No data upload. ---
+function validID(s){return typeof s==='string' && /^[0-9A-Za-z:_-]{1,128}$/.test(s)}
+function validDate(s){if(typeof s!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(s))return false;const d=new Date(s+'T12:00:00Z');return !Number.isNaN(d.getTime())&&d.toISOString().slice(0,10)===s;}
+function makeClassicImport(raw){
+ if(!raw||raw.version!==5 || !Array.isArray(raw.accounts)||!Array.isArray(raw.transactions)||!Array.isArray(raw.categoryDefinitions)||!Array.isArray(raw.budgets))throw Error('Ce fichier ne correspond pas au format iCompta 2 converti (V0.5).');
+ if(raw.accounts.length<1||raw.accounts.length>100||raw.transactions.length>250000||raw.budgets.length!==1||raw.categoryDefinitions.length>1000)throw Error('Inventaire non pris en charge : nombre de comptes, opérations ou budgets incorrect.');
+ const acIds=new Set(),txIds=new Set(),catNames=new Set();
+ const exactCents=v=>{if(!Number.isSafeInteger(v)||Math.abs(v)>9000000000000)throw Error('Montant illisible.');return v};
+ const hex=v=>safeHex('#'+String(v||'').replace(/^#/,''));
+ const accounts=raw.accounts.map(a=>{
+  if(!validID(a.id)||acIds.has(a.id)||typeof a.name!=='string'||!a.name.trim()||a.name.length>200)throw Error('Compte incorrect ou en double.');
+  acIds.add(a.id);
+  return {id:a.id,name:a.name,initial:exactCents(a.initialBalanceCents),icon:'▣',color:hex(a.colorHex)};
+ });
+ const categories=raw.categoryDefinitions.map(c=>{
+  if(typeof c.name!=='string'||!c.name.trim()||c.name.length>120||catNames.has(c.name))throw Error('Catégorie absente ou en double.');
+  catNames.add(c.name);
+  return {name:c.name,color:hex(c.colorHex),active:c.isActive!==false};
+ });
+ const statuses={'Pointée':'cleared','En attente':'pending','Annulée':'cancelled'},recurrences={'Aucune':'none','Mensuelle':'monthly','Toutes les 4 semaines':'fourweeks'},leads={'Un mois avant':'month','Une semaine avant':'week','Quatre semaines avant':'fourweeks'};
+ const transfers=new Map();
+ const transactions=raw.transactions.map(t=>{
+  if(!validID(t.id)||txIds.has(t.id)||!acIds.has(t.accountID)||typeof t.label!=='string'||t.label.length>500)throw Error('Opération invalide ou identifiant en double.');
+  txIds.add(t.id);
+  const date=String(t.date||'').slice(0,10);
+  if(!validDate(date)||!(t.status in statuses)||!(t.recurrence in recurrences)||!(t.recurrenceLead in leads))throw Error('Date, statut ou périodicité invalide.');
+  const cat=t.category||'Sans catégorie';if(!catNames.has(cat))throw Error('Référence de catégorie inconnue.');
+  let allocations=null;
+  if(t.allocations!==null&&t.allocations!==undefined){
+    if(!Array.isArray(t.allocations)||t.allocations.length>100)throw Error('Ventilation invalide.');
+    allocations=t.allocations.map(a=>{if(!catNames.has(a.category)||!Number.isFinite(a.ratio)||Math.abs(a.ratio)>10)throw Error('Pourcentage de ventilation invalide.');return {category:a.category,ratio:a.ratio};});
+  }
+  const transferId=t.transferID||null;
+  if(transferId){if(!validID(transferId))throw Error('Virement invalide.');const pair=transfers.get(transferId)||[];pair.push(t);transfers.set(transferId,pair);}
+  const end=t.recurrenceEndDate?String(t.recurrenceEndDate).slice(0,10):'';
+  if(end&&!validDate(end))throw Error('Fin de récurrence invalide.');
+  return {id:t.id,account:t.accountID,label:t.label,amount:exactCents(t.amountCents),date,category:cat,
+    status:statuses[t.status],clearedOn:t.clearedOn||null,
+    recurrence:recurrences[t.recurrence],repeatNotice:leads[t.recurrenceLead],repeatDay:t.recurrenceDay||Number(date.slice(8,10)),repeatEnd:end,
+    allocations,transferId,kind:t.kind||'',comment:t.comment||''};
+ });
+ for(const pair of transfers.values()){
+  if(pair.length!==2||pair[0].amountCents+pair[1].amountCents!==0||pair[0].accountID===pair[1].accountID)throw Error('Le fichier contient un virement incomplet ou non équilibré.');
+ }
+ const b=raw.budgets[0];if(!Array.isArray(b.accountIDs)||!Array.isArray(b.lines)||b.period!=='Annuel')throw Error('Le budget n’est pas annuel.');
+ if(!b.accountIDs.length||b.accountIDs.some(id=>!acIds.has(id)))throw Error('Le budget référence un compte inconnu.');
+ const lines=b.lines.map(l=>{
+  if(!catNames.has(l.category)||!['Débit','Crédit'].includes(l.direction))throw Error('Ligne de budget inconnue.');
+  return {id:validID(l.id)?l.id:uid(),category:l.category,side:l.direction==='Débit'?'expense':'income',amount:exactCents(l.plannedCents)};
+ });
+ const budget={id:validID(b.id)?b.id:uid(),name:'Budget annuel',period:'year',accounts:[...b.accountIDs],lines};
+ return normalize({accounts,categories,transactions,budget,isRealData:true,verified:false,importedAt:new Date().toISOString()});
+}
+function checkNativeBackup(raw){
+ if(raw?.format!=='iComptaClassicBackup' || raw.version!==1||!raw.payload)throw Error('Sauvegarde Classic invalide.');
+ const v=raw.payload;
+ if(!Array.isArray(v.accounts)||!Array.isArray(v.transactions)||!v.budget||!Array.isArray(v.categories))throw Error('Sauvegarde incomplète.');
+ const ac=new Set(v.accounts.map(x=>x.id)); const ids=new Set();
+ if(v.accounts.length>100||v.transactions.length>250000)throw Error('Sauvegarde trop volumineuse.');
+ for(const t of v.transactions){if(!validID(t.id)||ids.has(t.id)||!ac.has(t.account)||!validDate(t.date)||!Number.isSafeInteger(t.amount))throw Error('Opération non valide dans la sauvegarde.');ids.add(t.id);}
+ return normalize(v);
+}
+function downloadJSON(payload,name){
+ const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+ const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),15000);
+}
+function exportBackup(){
+ downloadJSON({format:'iComptaClassicBackup',version:1,exportedAt:new Date().toISOString(),payload:clone(data)},'iComptaClassic_sauvegarde_'+today()+'.json');
+}
+async function prepareImport(event){
+ stagedImport=null;
+ const f=event.target.files?.[0],preview=$('importPreview');if(!f)return;
+ if(f.size>25*1024*1024){preview.textContent='Fichier trop volumineux (limite 25 Mo).';return;}
+ try{
+  const raw=JSON.parse(await f.text());
+  stagedImport=raw?.format==='iComptaClassicBackup'?checkNativeBackup(raw):makeClassicImport(raw);
+  const d=stagedImport,count=d.transactions.filter(t=>['monthly','fourweeks'].includes(t.recurrence)).length;
+  const selected=d.budget.accounts.map(id=>d.accounts.find(a=>a.id===id)?.name||'Compte inconnu').join(', ');
+  const rows=d.accounts.map(a=>{const b=moneyBalFor(d,a);return `<tr><td>${escapeHTML(a.name)}</td><td>${euro(b.real)}</td><td>${euro(b.cleared)}</td></tr>`;}).join('');
+  preview.innerHTML=`<strong>Fichier contrôlé localement</strong><p>${d.accounts.length} comptes · ${d.transactions.length} opérations · ${count} récurrences · ${d.budget.lines.length} lignes budgétaires.</p>
+   <table class="audit-table"><thead><tr><th>Compte</th><th>Solde</th><th>Pointé</th></tr></thead><tbody>${rows}</tbody></table>
+   <p class="smallnote">Budget annuel portant sur : ${escapeHTML(selected)}.</p>
+   <p class="warning">L’import remplace les données visibles de cette version. Vérifie les soldes et exporte une sauvegarde JSON avant d’utiliser ta comptabilité.</p>
+   <label class="confirm-import"><input type="checkbox" id="importConsent" onchange="$('applyImportButton').disabled=!this.checked"> J’ai conservé une copie de mes anciennes données et je confirme le remplacement.</label>
+   <button class="softbtn wide" id="applyImportButton" onclick="applyImport()" disabled>Importer ces données</button>`;
+ }catch(e){preview.textContent='Import refusé : '+String(e.message||e);stagedImport=null;}
+}
+function applyImport(){
+ if(!stagedImport||!$('importConsent')?.checked)return;
+ if(!confirm('Confirmer l’import de cette sauvegarde ? Les données actuellement affichées seront remplacées.'))return;
+ try{
+  const previous=JSON.stringify(data),incoming=JSON.stringify(stagedImport);
+  localStorage.setItem(KEY+'-precedent',previous);
+  // Le précédent état reste disponible même si l’application est réouverte.
+  const history=readHistory();history.unshift({at:new Date().toISOString(),snapshot:previous});
+  localStorage.setItem(KEY+'-history',JSON.stringify(history.slice(0,3)));
+  localStorage.setItem(KEY,incoming);
+  if(localStorage.getItem(KEY)!==incoming)throw Error('Contrôle écriture impossible');
+  data=stagedImport;stagedImport=null;accountId=null;editMode=false;budgetYear=new Date().getFullYear();
+  show('audit');alert('Import effectué localement. Contrôle les soldes avant d’activer les récurrences.');
+ }catch(e){alert('Import interrompu : '+String(e.message||e)+'. Vérifie la sauvegarde avant de réessayer.');}
+}
+
+function restorePrevious(){
+ if(!confirm('Revenir à la copie locale conservée avant le dernier import ?'))return;
+ try{const p=localStorage.getItem(KEY+'-precedent');if(!p)throw Error('Aucune copie disponible');const old=normalize(JSON.parse(p));const current=JSON.stringify(data);localStorage.setItem(KEY,JSON.stringify(old));localStorage.setItem(KEY+'-precedent',current);data=old;show('home');}
+ catch(e){alert('Restauration impossible : '+e.message);}
+}
+function restoreRecentState(index){
+ const history=readHistory(),item=history[index];if(!item)return;
+ if(!confirm('Revenir à cet état de secours ? Les modifications les plus récentes seront remplacées. Exporte une sauvegarde avant de continuer.'))return;
+ try{
+  const old=normalize(JSON.parse(item.snapshot));const current=JSON.stringify(data);
+  history.splice(index,1);history.unshift({at:new Date().toISOString(),snapshot:current});
+  localStorage.setItem(KEY+'-history',JSON.stringify(history.slice(0,3)));
+  localStorage.setItem(KEY,JSON.stringify(old));data=old;show('audit');
+ }catch(e){alert('État non restauré : '+String(e.message||e));}
+}
+function auditScreen(){
+ header('Vérifier les soldes',nbtn('‹ Données',"show('info')"),'');
+ const totals={real:0,cleared:0};
+ const rows=data.accounts.map(a=>{
+  const b=moneyBal(a);totals.real+=b.real;totals.cleared+=b.cleared;
+  return `<tr><td>${escapeHTML(a.name)}</td><td>${euro(b.real)}</td><td>${euro(b.cleared)}</td></tr>`;
+ }).join('');
+ const recurrent=data.transactions.filter(t=>['monthly','fourweeks'].includes(t.recurrence)).length;
+ $('content').innerHTML=`<div class="info"><h3>Contrôle après importation</h3>
+  <p>Compare les montants ci-dessous avec ceux de ton fichier ou de l’ancien iCompta 2 <strong>à la même date</strong>. Les photos prises à une autre date peuvent présenter des différences normales.</p>
+  <table class="audit-table"><thead><tr><th>Compte</th><th>Solde</th><th>Pointé</th></tr></thead><tbody>${rows}
+  <tr class="audit-total"><th>Total</th><th>${euro(totals.real)}</th><th>${euro(totals.cleared)}</th></tr></tbody></table>
+  <p>${data.transactions.length} écritures · ${recurrent} règles de récurrence · ${data.budget.lines.length} lignes de budget.</p>
+  <p><strong>État des récurrences :</strong> ${data.isRealData?(data.verified?'activées':'suspendues en attendant ton contrôle'):'démonstration'}.</p>
+  <button class="softbtn wide" onclick="exportBackup()">↓ Sauvegarder avant de continuer</button>
+  <button class="softbtn wide" onclick="show('budget')">Voir le budget annuel</button>
+  ${data.isRealData&&!data.verified?'<button class="softbtn wide" onclick="enableRecurrences()">Activer les récurrences après contrôle</button>':''}
+  <p class="smallnote warning">Ce tableau calcule les soldes depuis les données importées. Il ne prouve pas, à lui seul, leur concordance avec l’ancien iCompta.</p>
+  </div>`;
+ $('toolbar').innerHTML=btn('Accueil','⌂',"show('home')")+btn('Données','⇧',"show('info')");
+}
+function enableRecurrences(){
+ if(!data.isRealData || data.verified===true)return;
+ if(!confirm('Tu as vérifié les soldes de tous tes comptes et exporté une sauvegarde ? Activer la création automatique des prochaines échéances au lancement ?'))return;
+ data.verified=true;autoAdvanceRecurrences();persist();show('info');
+}
+function info(){
+ header('Données locales',nbtn('‹ iCompta',"show('home')"),'');
+ const recent=readHistory().map((x,i)=>`<button class="softbtn wide" onclick="restoreRecentState(${i})">↶ État de secours ${i+1} · ${escapeHTML(new Date(x.at).toLocaleString('fr-FR'))}</button>`).join('');
+ $('content').innerHTML=`<div class="info"><h3>iCompta Classic · V0.8 locale</h3>
+ <p><strong>${data.isRealData?'Comptabilité importée':'Démonstration avec montants fictifs'}</strong>. Aucune connexion bancaire, aucun abonnement. Les données sont conservées dans le navigateur de cet appareil.</p>
+ ${migratedFrom?'<p class="smallnote">Une précédente version a été détectée. La sauvegarde V0.7 reste inchangée.</p>':''}
+ <p class="smallnote warning">Prototype non audité. Le stockage du navigateur peut être effacé. Les fichiers JSON exportés ne sont pas chiffrés : garde-les dans un endroit privé.</p>
+ <h3>1. Importer une comptabilité</h3>
+ <p>Fichier accepté : <code>iCompta_Import_V05_PRIVE.json</code> ou sauvegarde iCompta Classic. Lecture uniquement sur cet appareil.</p>
+ <input id="importFile" aria-label="Fichier JSON privé à importer" type="file" accept=".json,application/json" onchange="prepareImport(event)">
+ <div id="importPreview" class="fieldpanel importbox">Aucun fichier sélectionné.</div>
+ <h3>2. Sauvegarde et contrôle</h3>
+ <button class="softbtn wide" onclick="exportBackup()">↓ Exporter une sauvegarde JSON</button>
+ <button class="softbtn wide" onclick="show('audit')">✓ Contrôler les soldes par compte</button>
+ <button class="softbtn wide" onclick="restorePrevious()">↶ Revenir aux données avant le dernier import</button>
+ <h3>3. États de secours locaux</h3>
+ <p>Les trois derniers états sont conservés automatiquement dans le navigateur lorsque des données réelles sont modifiées. Ils peuvent disparaître si Safari efface son stockage : ce n’est pas un remplacement des sauvegardes JSON.</p>
+ ${recent||'<p class="smallnote">Aucun état de secours disponible.</p>'}
+ <h3>4. Opérations récurrentes</h3>
+ <p>${data.verified?'Création automatique des échéances : activée.':data.isRealData?'Création automatique : suspendue jusqu’à vérification des soldes. Les prochaines échéances figurent dans les prévisions.':'Création automatique active sur les données fictives.'}</p>
+ ${data.isRealData&&!data.verified?'<button class="softbtn wide" onclick="enableRecurrences()">Activer après vérification des soldes</button>':''}
+ <h3>5. Installation et fonctionnement</h3>
+ <p>${location.protocol==='file:'?'Ouvert en fichier local : utilisation sur Mac, sans installation iPhone.':'Version web : pour installer sur iPhone, ouverture initiale en HTTPS, puis ajout à l’écran d’accueil.'}</p>
+ <p>Les écrans Budget, Échéancier et Opérations reprennent les photographies originales d’iCompta 2.</p>
+ ${storageWarning?'<p class="warning">Attention : stockage indisponible ou saturé. Exporte immédiatement une sauvegarde avant toute autre modification.</p>':''}
+ <p class="smallnote">Aucune télémétrie ; aucun fichier financier inclus dans le code de l’application.</p>
+ </div>`;
+ $('toolbar').innerHTML=btn('Accueil','⌂',"show('home')")+btn('Budget','▤',"show('budget')");
+}
+
+function reset(){
+ if(data.isRealData){alert('Réinitialisation désactivée pour éviter de supprimer des données réelles. Utilise la restauration ou une sauvegarde.');return;}
+ if(!confirm('Réinitialiser seulement les données fictives ?'))return;
+ data=sample();persist();accountId=null;editMode=false;budgetYear=new Date().getFullYear();show('home');
+}
+
+function render(){switch(screen){
+  case 'home':home();break;case 'transactions':transactions();break;case 'txEditor':transactionEditor();break;
+  case 'accountEditor':accountEditor();break;case 'categories':categoriesScreen();break;case 'categoryEditor':categoryEditor();break;
+  case 'transfer':transferEditor();break;case 'budget':budgetScreen();break;case 'budgetEditor':budgetEditor();break;
+  case 'info':info();break;case 'audit':auditScreen();break;case 'schedule':scheduleScreen();break;default:show('home');break;
+}}
+persist();render();
+if ('serviceWorker' in navigator && (location.protocol==='https:' || location.hostname==='localhost' || location.hostname==='127.0.0.1')) navigator.serviceWorker.register('./sw.js').catch(err=>console.warn('Mode hors ligne non activé',err));
+</script>
+</body>
+</html>

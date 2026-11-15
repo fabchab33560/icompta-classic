@@ -1,0 +1,25 @@
+{
+  "name": "iCompta Classic — Version 0.8",
+  "short_name": "iCompta Classic",
+  "description": "Comptabilité personnelle locale et hors connexion",
+  "lang": "fr",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#f6f7f9",
+  "icons": [
+    {
+      "src": "./icone-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icone-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
