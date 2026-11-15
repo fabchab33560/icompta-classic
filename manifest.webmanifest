@@ -1,7 +1,7 @@
 {
-  "name": "iCompta Classic — Version 0.9",
+  "name": "iCompta Classic — Version 1.1",
   "short_name": "iCompta Classic",
-  "description": "Comptabilité personnelle locale et hors connexion — V0.9",
+  "description": "Comptabilité personnelle locale et hors connexion — V1.1",
   "lang": "fr",
   "start_url": "./index.html",
   "scope": "./",
